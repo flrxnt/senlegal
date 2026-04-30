@@ -1,0 +1,262 @@
+// SenLégal — Prisma schema
+// Postgres + Prisma 7 driver adapter (@prisma/adapter-pg) — see prisma.service.ts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PENDING
+}
+
+enum BillingProvider {
+  PAYDUNYA
+  MANUAL
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum DocumentKind {
+  AVATAR
+  USER_PRIVATE
+  RAG_SOURCE
+  CHAT_ATTACHMENT
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum AnalyticsEventType {
+  USER_REGISTERED
+  USER_LOGGED_IN
+  CHAT_MESSAGE_SENT
+  DOCUMENT_UPLOADED
+  SUBSCRIPTION_CREATED
+  SUBSCRIPTION_RENEWED
+  SUBSCRIPTION_CANCELLED
+  SUBSCRIPTION_EXPIRED
+  PAYMENT_SUCCEEDED
+  PAYMENT_FAILED
+  ADMIN_ACTION
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  phone        String?
+  role         UserRole  @default(USER)
+  plan         Plan      @default(FREE)
+  avatarKey    String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  conversations Conversation[]
+  documents     Document[]
+  subscriptions Subscription[]
+  invoices      Invoice[]
+  resetTokens   PasswordResetToken[]
+  events        AnalyticsEvent[]
+
+  @@index([plan])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String   @default("Nouvelle conversation")
+  pinned    Boolean  @default(false)
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@index([userId, archived])
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String
+  citations      Json?
+  usedContext    Boolean     @default(false)
+  tokensIn       Int?
+  tokensOut      Int?
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Documents (S3/MinIO)
+// ---------------------------------------------------------------------------
+
+model Document {
+  id          String       @id @default(cuid())
+  ownerId     String?
+  kind        DocumentKind
+  bucket      String
+  objectKey   String
+  filename    String
+  contentType String
+  sizeBytes   Int
+  checksum    String?
+  metadata    Json?
+  ingestedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@unique([bucket, objectKey])
+  @@index([ownerId, kind, createdAt])
+  @@index([kind, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Subscriptions & Billing
+// ---------------------------------------------------------------------------
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  plan               Plan
+  status             SubscriptionStatus @default(PENDING)
+  provider           BillingProvider
+  providerCustomerId String?
+  amount             Int
+  currency           String             @default("XOF")
+  startedAt          DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  cancelledAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@index([userId, status])
+  @@index([status, currentPeriodEnd])
+}
+
+model Invoice {
+  id                String          @id @default(cuid())
+  userId            String
+  subscriptionId    String?
+  provider          BillingProvider
+  providerInvoiceId String?         @unique
+  providerToken     String?         @unique
+  status            InvoiceStatus   @default(PENDING)
+  plan              Plan
+  amount            Int
+  currency          String          @default("XOF")
+  description       String?
+  metadata          Json?
+  paidAt            DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Observability
+// ---------------------------------------------------------------------------
+
+model AnalyticsEvent {
+  id        String             @id @default(cuid())
+  userId    String?
+  type      AnalyticsEventType
+  payload   Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime           @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type, createdAt])
+  @@index([userId, createdAt])
+}
+
+model ErrorLog {
+  id        String   @id @default(cuid())
+  status    Int
+  message   String
+  path      String?
+  method    String?
+  stack     String?
+  userId    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+}

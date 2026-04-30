@@ -1,0 +1,182 @@
+name: senlegal
+
+# SenLégal — stack complète (postgres + minio + mailpit + ai + backend)
+# Usage:
+#   cp backend/.env.example backend/.env
+#   docker compose up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: senlegal_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: senlegal
+      POSTGRES_PASSWORD: senlegal
+      POSTGRES_DB: senlegal
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U senlegal -d senlegal" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: senlegal_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: senlegal
+      MINIO_ROOT_PASSWORD: senlegal_dev_secret_change_me
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: senlegal_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 senlegal senlegal_dev_secret_change_me &&
+        mc mb -p local/senlegal || true &&
+        mc anonymous set none local/senlegal &&
+        echo 'minio init done.'
+      "
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: senlegal_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+
+  ai:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    container_name: senlegal_ai
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8001"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:8000"
+      # Auth interne (matche backend AI_ADMIN_TOKEN)
+      ADMIN_TOKEN: ${AI_ADMIN_TOKEN:-change-me}
+      # LLM — Ollama Cloud
+      OLLAMA_HOST: ${OLLAMA_HOST:-https://ollama.com}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:?OLLAMA_API_KEY manquant dans .env racine}
+      # Garde le modèle chargé en mémoire côté Ollama Cloud entre deux requêtes
+      # (évite le cold start sur les requêtes peu fréquentes).
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+      MODEL_NAME: ${MODEL_NAME:-gemma4:31b-cloud}
+      # Embeddings + Chroma (chemins absolus = ceux du Dockerfile, pas ./data)
+      EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-small}
+      COLLECTION_NAME: ${COLLECTION_NAME:-senlegal_v1}
+      CHROMA_DIR: /data/chroma
+      PROCESSED_DIR: /data/processed
+      ASSETS_DIR: /assets
+      # Retrieval / génération
+      TOP_K: ${TOP_K:-5}
+      MIN_SCORE: ${MIN_SCORE:-0.35}
+      MAX_CHUNK_CHARS: ${MAX_CHUNK_CHARS:-1500}
+      MAX_NEW_TOKENS: ${MAX_NEW_TOKENS:-512}
+      TEMPERATURE: ${TEMPERATURE:-0.1}
+      REPETITION_PENALTY: ${REPETITION_PENALTY:-1.1}
+    ports:
+      - "8001:8001"
+    volumes:
+      - ai_data:/data
+      - ai_assets:/assets
+    healthcheck:
+      test: [ "CMD", "curl", "-fsS", "http://127.0.0.1:8001/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: senlegal_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      ai:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: postgresql://senlegal:senlegal@postgres:5432/senlegal?schema=public
+      APP_PUBLIC_URL: http://localhost:3001
+      WEB_PUBLIC_URL: http://localhost:3000
+      CORS_ORIGINS: "http://localhost:3000"
+      JWT_SECRET: ${JWT_SECRET:-please-change-this-in-production-32chars-min}
+      JWT_EXPIRES_IN: "7d"
+      BCRYPT_ROUNDS: "12"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@senlegal.sn}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMeNow!2026}
+      ADMIN_NAME: "Administrateur SenLégal"
+      SEED_ON_BOOT: "true"
+      AI_BASE_URL: http://ai:8001
+      AI_API_KEY: ""
+      AI_ADMIN_TOKEN: change-me
+      AI_TIMEOUT_MS: "60000"
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_URL: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: senlegal
+      S3_SECRET_KEY: senlegal_dev_secret_change_me
+      S3_BUCKET: senlegal
+      S3_FORCE_PATH_STYLE: "true"
+      MAX_AVATAR_SIZE_MB: "2"
+      MAX_USER_DOCUMENT_SIZE_MB: "25"
+      MAX_RAG_DOCUMENT_SIZE_MB: "100"
+      MAX_CHAT_ATTACHMENT_SIZE_MB: "10"
+      FREE_DAILY_CHAT_LIMIT: "5"
+      FREE_USER_STORAGE_MB: "50"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_FROM: "SenLégal <no-reply@senlegal.local>"
+      SUBSCRIPTIONS_SCHEDULER_ENABLED: "true"
+      PAYDUNYA_MASTER_KEY: ${PAYDUNYA_MASTER_KEY:-}
+      PAYDUNYA_PRIVATE_KEY: ${PAYDUNYA_PRIVATE_KEY:-}
+      PAYDUNYA_TOKEN: ${PAYDUNYA_TOKEN:-}
+      PAYDUNYA_MODE: ${PAYDUNYA_MODE:-test}
+      PAYDUNYA_STORE_NAME: "SenLégal"
+      PRICE_PRO_AMOUNT_XOF: "9900"
+      PRICE_PRO_DURATION_MONTHS: "1"
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  pgdata:
+  miniodata:
+  ai_data:
+  ai_assets:

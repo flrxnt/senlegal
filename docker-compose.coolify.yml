@@ -1,0 +1,198 @@
+# SenLégal — Coolify Docker Compose
+#
+# À utiliser dans Coolify > New Resource > Docker Compose (Build Pack).
+# Coolify clone lui-même le repo (configurer Source/Branch dans l'UI), donc les
+# contextes de build sont locaux (./ai, ./backend, ./frontend) — PAS de
+# GITHUB_TOKEN à placer ici (utilise une "Private Repository (Deploy Key)" ou un
+# GitHub App configuré côté Coolify).
+#
+# Conventions Coolify utilisées :
+#   - Magic vars SERVICE_FQDN_<service>_<port> : Coolify génère le domaine et
+#     branche son proxy Traefik (TLS automatique). Editable dans l'UI.
+#   - Magic vars SERVICE_PASSWORD_* / SERVICE_USER_* : générées au 1er deploy.
+#   - ${VAR:?}      → requis (Coolify met une bordure rouge tant que vide).
+#   - ${VAR:-def}   → défaut éditable dans l'UI.
+#   - Pas de `container_name`, pas de `ports` exposés sur l'hôte pour les
+#     services privés (Coolify gère le réseau et le proxy).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+      POSTGRES_DB: ${POSTGRES_DB:-senlegal}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      # Magic FQDN : un domaine généré et routé par Coolify vers le port 9000
+      # (S3 API public). Le 9001 (console) reste interne, accessible via tunnel
+      # ou autre FQDN si tu en ajoutes un dans l'UI.
+      SERVICE_FQDN_MINIO_9000: ""
+      MINIO_ROOT_USER: ${SERVICE_USER_MINIO}
+      MINIO_ROOT_PASSWORD: ${SERVICE_PASSWORD_MINIO}
+      MINIO_SERVER_URL: ${SERVICE_FQDN_MINIO_9000}
+      MINIO_BROWSER_REDIRECT_URL: ${SERVICE_FQDN_MINIO_9000}
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    exclude_from_hc: true
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${SERVICE_USER_MINIO}
+      MINIO_ROOT_PASSWORD: ${SERVICE_PASSWORD_MINIO}
+      S3_BUCKET: ${S3_BUCKET:-senlegal}
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
+        mc mb -p local/$${S3_BUCKET} || true &&
+        mc anonymous set none local/$${S3_BUCKET} &&
+        echo 'minio init done.'
+      "
+    restart: "no"
+
+  ai:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8001"
+      CORS_ORIGINS: ${SERVICE_FQDN_BACKEND_3001}
+      ADMIN_TOKEN: ${SERVICE_PASSWORD_AIADMIN}
+      OLLAMA_HOST: ${OLLAMA_HOST:-https://ollama.com}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:?}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+      MODEL_NAME: ${MODEL_NAME:-gemma4:31b-cloud}
+      EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-small}
+      COLLECTION_NAME: ${COLLECTION_NAME:-senlegal_v1}
+      CHROMA_DIR: /data/chroma
+      PROCESSED_DIR: /data/processed
+      ASSETS_DIR: /assets
+      TOP_K: ${TOP_K:-5}
+      MIN_SCORE: ${MIN_SCORE:-0.35}
+      MAX_CHUNK_CHARS: ${MAX_CHUNK_CHARS:-1500}
+      MAX_NEW_TOKENS: ${MAX_NEW_TOKENS:-512}
+      TEMPERATURE: ${TEMPERATURE:-0.1}
+      REPETITION_PENALTY: ${REPETITION_PENALTY:-1.1}
+    volumes:
+      - ai_data:/data
+      - ai_assets:/assets
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      ai:
+        condition: service_started
+    environment:
+      # Coolify génère le FQDN public et route le trafic HTTPS vers 3001
+      SERVICE_FQDN_BACKEND_3001: ""
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-senlegal}?schema=public
+      APP_PUBLIC_URL: ${SERVICE_FQDN_BACKEND_3001}
+      WEB_PUBLIC_URL: ${SERVICE_FQDN_FRONTEND_3000}
+      CORS_ORIGINS: ${SERVICE_FQDN_FRONTEND_3000}
+      JWT_SECRET: ${SERVICE_PASSWORD_64_JWT}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      BCRYPT_ROUNDS: "12"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrateur SenLégal}
+      SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
+      AI_BASE_URL: http://ai:8001
+      AI_API_KEY: ""
+      AI_ADMIN_TOKEN: ${SERVICE_PASSWORD_AIADMIN}
+      AI_TIMEOUT_MS: ${AI_TIMEOUT_MS:-60000}
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_URL: ${SERVICE_FQDN_MINIO_9000}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${SERVICE_USER_MINIO}
+      S3_SECRET_KEY: ${SERVICE_PASSWORD_MINIO}
+      S3_BUCKET: ${S3_BUCKET:-senlegal}
+      S3_FORCE_PATH_STYLE: "true"
+      MAX_AVATAR_SIZE_MB: "2"
+      MAX_USER_DOCUMENT_SIZE_MB: "25"
+      MAX_RAG_DOCUMENT_SIZE_MB: "100"
+      MAX_CHAT_ATTACHMENT_SIZE_MB: "10"
+      FREE_DAILY_CHAT_LIMIT: "5"
+      FREE_USER_STORAGE_MB: "50"
+      SMTP_HOST: ${SMTP_HOST:?}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-SenLégal <no-reply@senlegal.sn>}
+      SUBSCRIPTIONS_SCHEDULER_ENABLED: "true"
+      PAYDUNYA_MASTER_KEY: ${PAYDUNYA_MASTER_KEY:-}
+      PAYDUNYA_PRIVATE_KEY: ${PAYDUNYA_PRIVATE_KEY:-}
+      PAYDUNYA_TOKEN: ${PAYDUNYA_TOKEN:-}
+      PAYDUNYA_MODE: ${PAYDUNYA_MODE:-live}
+      PAYDUNYA_STORE_NAME: ${PAYDUNYA_STORE_NAME:-SenLégal}
+      PRICE_PRO_AMOUNT_XOF: ${PRICE_PRO_AMOUNT_XOF:-9900}
+      PRICE_PRO_DURATION_MONTHS: ${PRICE_PRO_DURATION_MONTHS:-1}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      SERVICE_FQDN_FRONTEND_3000: ""
+      NODE_ENV: production
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: "3000"
+      NUXT_PUBLIC_API_BASE: ${SERVICE_FQDN_BACKEND_3001}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  pgdata:
+  miniodata:
+  ai_data:
+  ai_assets:

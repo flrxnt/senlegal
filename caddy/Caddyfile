@@ -1,0 +1,21 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# App publique (Nuxt)
+{$WEB_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy frontend:3000
+}
+
+# API NestJS
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy backend:3001
+}
+
+# Fichiers MinIO (S3 public read pour les avatars/docs publics)
+{$FILES_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy minio:9000
+}

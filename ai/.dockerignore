@@ -1,0 +1,17 @@
+# Build context — exclure tout ce qui ne doit pas finir dans l'image
+.git
+.gitignore
+.venv
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+!.env.example
+*.egg-info
+tests
+README.md
+Dockerfile
+.dockerignore
