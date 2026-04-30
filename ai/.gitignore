@@ -4,9 +4,8 @@ __pycache__/
 .venv/
 venv/
 .env
-data/chroma/
-data/processed/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 *.log
+

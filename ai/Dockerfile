@@ -24,6 +24,8 @@ RUN pip install --prefix=/install --index-url https://download.pytorch.org/whl/c
 COPY pyproject.toml ./
 COPY app ./app
 COPY scripts ./scripts
+COPY data/chroma ./data/chroma
+COPY data/processed ./data/processed
 
 # Installe le projet et toutes ses deps dans /install
 RUN pip install --prefix=/install .
@@ -66,6 +68,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Récupère les dépendances Python et le modèle pré-téléchargé
 COPY --from=builder /install /usr/local
 COPY --from=builder /models /models
+COPY --from=builder /app/data /data
 
 # Code applicatif
 COPY app ./app
@@ -73,7 +76,6 @@ COPY scripts ./scripts
 COPY pyproject.toml ./
 
 # Volumes persistants gérés par Coolify (à monter sur /data et /assets)
-# L'index Chroma et les chunks sont (re)générés via /admin/reindex après le 1er deploy.
 RUN mkdir -p /data/chroma /data/processed /assets \
   && chown -R app:app /app /data /assets /models
 
