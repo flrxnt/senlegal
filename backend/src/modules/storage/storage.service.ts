@@ -28,20 +28,32 @@ export interface UploadInput {
 export class StorageService implements OnModuleInit {
   private readonly logger = new Logger('StorageService');
   readonly client: S3Client;
+  /** Client dont l'endpoint est l'URL publique — pour les presigned URLs destinées au navigateur. */
+  private readonly publicClient: S3Client;
   readonly defaultBucket: string;
 
   constructor(private readonly config: ConfigService) {
     const endpoint = config.get<string>('S3_ENDPOINT') ?? 'http://localhost:9000';
+    const publicUrl = config.get<string>('S3_PUBLIC_URL') || endpoint;
     const region = config.get<string>('S3_REGION') ?? 'us-east-1';
     const accessKeyId = config.get<string>('S3_ACCESS_KEY') ?? 'minio';
     const secretAccessKey = config.get<string>('S3_SECRET_KEY') ?? 'minio12345';
     const forcePathStyle = (config.get<string>('S3_FORCE_PATH_STYLE') ?? 'true') === 'true';
 
+    const credentials = { accessKeyId, secretAccessKey };
     this.defaultBucket = config.get<string>('S3_BUCKET') ?? 'senlegal';
+
     this.client = new S3Client({
       endpoint,
       region,
-      credentials: { accessKeyId, secretAccessKey },
+      credentials,
+      forcePathStyle,
+    });
+
+    this.publicClient = new S3Client({
+      endpoint: publicUrl,
+      region,
+      credentials,
       forcePathStyle,
     });
   }
@@ -87,7 +99,7 @@ export class StorageService implements OnModuleInit {
 
   async getSignedDownloadUrl(bucket: string, key: string, expiresIn = 300): Promise<string> {
     return getSignedUrl(
-      this.client,
+      this.publicClient,
       new GetObjectCommand({ Bucket: bucket, Key: key }),
       { expiresIn },
     );
