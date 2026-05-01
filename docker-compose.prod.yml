@@ -178,7 +178,9 @@ services:
       NODE_ENV: production
       NUXT_HOST: 0.0.0.0
       NUXT_PORT: "3000"
-      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-${APP_PUBLIC_URL}}
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-${APP_PUBLIC_URL}/api}
+      # Optionnel : proxy Nitro (remplacer la ligne ci-dessus par /api si activé)
+      # NUXT_API_PROXY_TARGET: http://backend:3001
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://127.0.0.1:3000/" ]
       interval: 30s

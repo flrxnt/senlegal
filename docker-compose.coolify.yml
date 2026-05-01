@@ -118,13 +118,16 @@ services:
       ai:
         condition: service_started
     environment:
-      # Coolify génère le FQDN public et route le trafic HTTPS vers 3001
+      # FQDN public : requis uniquement pour les webhooks PayDunya (callback_url).
+      # Le frontend ne l'utilise plus (proxy Nitro interne).
       SERVICE_FQDN_BACKEND_3001: ""
       NODE_ENV: production
       PORT: "3001"
       DATABASE_URL: postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-senlegal}?schema=public
       APP_PUBLIC_URL: ${SERVICE_FQDN_BACKEND_3001}
       WEB_PUBLIC_URL: ${SERVICE_FQDN_FRONTEND_3000}
+      # CORS : autorise le FQDN frontend (au cas où le backend est appelé
+      # directement) et le proxy interne n'en a pas besoin (pas de navigateur).
       CORS_ORIGINS: ${SERVICE_FQDN_FRONTEND_3000}
       JWT_SECRET: ${SERVICE_PASSWORD_64_JWT}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
@@ -183,7 +186,10 @@ services:
       NODE_ENV: production
       NUXT_HOST: 0.0.0.0
       NUXT_PORT: "3000"
-      NUXT_PUBLIC_API_BASE: ${SERVICE_FQDN_BACKEND_3001}
+      # /api relatif = même-origine → le navigateur requête le front,
+      # le proxy Nitro (server/api/[...].ts) relaie vers le backend interne.
+      NUXT_PUBLIC_API_BASE: /api
+      NUXT_API_PROXY_TARGET: http://backend:3001
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://127.0.0.1:3000/" ]
       interval: 30s
