@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     chroma_dir: str = "./data/chroma"
     processed_dir: str = "./data/processed"
     collection_name: str = "senlegal_v1"
+    # Mode serveur Chroma : si chroma_host est défini, on utilise un HttpClient
+    # vers un service Chroma distant ; sinon on retombe sur PersistentClient local.
+    chroma_host: str | None = None
+    chroma_port: int = 8000
+    chroma_ssl: bool = False
 
     # Retrieval
     top_k: int = 5

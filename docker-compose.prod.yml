@@ -33,8 +33,11 @@ services:
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:?S3_ACCESS_KEY manquant}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?S3_SECRET_KEY manquant}
-      MINIO_BROWSER_REDIRECT_URL: ${MINIO_CONSOLE_PUBLIC_URL:-}
-      MINIO_SERVER_URL: ${S3_PUBLIC_URL:-}
+      # Doit correspondre à S3_PUBLIC_URL : MinIO valide les signatures contre
+      # cet hôte. Si vide, MinIO accepte n'importe quel host mais les liens
+      # générés par le backend peuvent pointer sur le hostname interne.
+      MINIO_SERVER_URL: ${S3_PUBLIC_URL:?S3_PUBLIC_URL manquant - ex https://files.senlegal.sn}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_CONSOLE_PUBLIC_URL:-${S3_PUBLIC_URL}}
     volumes:
       - miniodata:/data
     healthcheck:
@@ -58,6 +61,29 @@ services:
       "
     restart: "no"
 
+  chromadb:
+    image: chromadb/chroma:0.5.20
+    container_name: senlegal_chromadb
+    restart: unless-stopped
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+      ALLOW_RESET: "FALSE"
+    volumes:
+      - chromadata:/chroma/chroma
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/bin/sh",
+          "-c",
+          "curl -fsS http://localhost:8000/api/v2/heartbeat || curl -fsS
+            http://localhost:8000/api/v1/heartbeat",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   ai:
     image: ${REGISTRY:-senlegal}/ai:${IMAGE_TAG:-${GITHUB_REF:-latest}}
     build:
@@ -68,6 +94,9 @@ services:
     pull_policy: build
     container_name: senlegal_ai
     restart: unless-stopped
+    depends_on:
+      chromadb:
+        condition: service_healthy
     environment:
       HOST: 0.0.0.0
       PORT: "8001"
@@ -79,7 +108,9 @@ services:
       MODEL_NAME: ${MODEL_NAME:-gemma4:31b-cloud}
       EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-small}
       COLLECTION_NAME: ${COLLECTION_NAME:-senlegal_v1}
-      CHROMA_DIR: /data/chroma
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: "8000"
+      CHROMA_SSL: "false"
       PROCESSED_DIR: /data/processed
       ASSETS_DIR: /assets
       TOP_K: ${TOP_K:-5}
@@ -216,5 +247,6 @@ volumes:
   miniodata:
   ai_data:
   ai_assets:
+  chromadata:
   caddy_data:
   caddy_config:

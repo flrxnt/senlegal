@@ -24,6 +24,9 @@ def _chunk_to_meta(c: Chunk) -> dict:
         "page_start": c.page_start,
         "page_end": c.page_end,
         "part": c.part,
+        "doc_type": c.doc_type,
+        "decision_number": c.decision_number or "",
+        "decision_date": c.decision_date or "",
     }
 
 

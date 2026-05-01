@@ -59,6 +59,12 @@ export class DocumentsController {
   }
 
   @Roles(UserRole.ADMIN)
+  @Post('admin/rag/sources/:id/reingest')
+  reingestRag(@Param('id') id: string) {
+    return this.docs.reingestRagSource(id);
+  }
+
+  @Roles(UserRole.ADMIN)
   @Delete('admin/rag/sources/:id')
   deleteRag(@Param('id') id: string) {
     return this.docs.deleteRagSource(id);

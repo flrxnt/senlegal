@@ -43,6 +43,9 @@ class Chunk:
     page_start: int
     page_end: int
     part: int = 0  # numéro de sous-partie si l'article a été re-splitté
+    doc_type: str = "code"
+    decision_number: str | None = None
+    decision_date: str | None = None
     metadata: dict = field(default_factory=dict)
 
 
@@ -189,12 +192,198 @@ def chunk_pages(
 
 
 def chunk_documents(pages: list[PageText], max_chunk_chars: int = 1500) -> list[Chunk]:
-    """Groupe les pages par document puis chunke chacun."""
+    """Groupe les pages par document puis chunke chacun.
+
+    Dispatch automatiquement vers ``chunk_pages`` (Code) ou ``chunk_decision``
+    (décisions ARCOP) selon le ``doc_type`` des pages.
+    """
     by_doc: dict[str, list[PageText]] = {}
     for p in pages:
         by_doc.setdefault(p.document, []).append(p)
     out: list[Chunk] = []
     for doc, doc_pages in by_doc.items():
         doc_pages.sort(key=lambda x: x.page)
-        out.extend(chunk_pages(doc_pages, max_chunk_chars=max_chunk_chars))
+        if doc_pages and doc_pages[0].doc_type == "decision":
+            out.extend(chunk_decision(doc_pages, max_chunk_chars=max_chunk_chars))
+        else:
+            out.extend(chunk_pages(doc_pages, max_chunk_chars=max_chunk_chars))
     return out
+
+
+# ---------------------------------------------------------------------------
+# Chunker spécifique aux décisions ARCOP / CRD
+# ---------------------------------------------------------------------------
+
+# Sections canoniques d'une décision ARCOP. L'ordre n'est pas garanti et toutes
+# les sections ne sont pas présentes dans toutes les décisions (les recours
+# déclarés irrecevables n'ont par ex. ni "FAITS" ni "EXAMEN").
+# Clé = identifiant court (servira de ``article_number``).
+# Valeur = expression régulière reconnaissant l'en-tête de section.
+_DECISION_SECTIONS: list[tuple[str, re.Pattern[str]]] = [
+    (
+        "VISAS",
+        re.compile(r"(?im)^\s*LA\s+CHAMBRE\s+DES\s+MARCH[ÉE]S\b"),
+    ),
+    (
+        "RECEVABILITE",
+        re.compile(r"(?im)^\s*SUR\s+LA\s+RECEVABILIT[ÉE]\s+DU\s+RECOURS\b"),
+    ),
+    (
+        "FAITS",
+        re.compile(r"(?im)^\s*LES\s+FAITS\b"),
+    ),
+    (
+        "MOYENS_REQUERANT",
+        re.compile(
+            r"(?im)^\s*LES\s+(?:MOYENS|MOTIFS)"
+            r"(?:\s+D[ÉE]VELOPP[ÉE]S)?\s+(?:A|À)\s+L[’']?APPUI\s+DU\s+RECOURS\b"
+        ),
+    ),
+    (
+        "MOTIFS_AUTORITE",
+        re.compile(
+            r"(?im)^\s*LES\s+MOTIFS\s+DONN[ÉE]S\s+PAR\s+L[’']?AUTORIT[ÉE]\s+CONTRACTANTE\b"
+        ),
+    ),
+    (
+        "OBJET",
+        re.compile(r"(?im)^\s*(?:L[’']?\s*)?OBJET\s+DU\s+LITIGE\b"),
+    ),
+    (
+        "EXAMEN",
+        re.compile(r"(?im)^\s*EXAMEN\s+DU\s+LITIGE\b"),
+    ),
+    (
+        "DISPOSITIF",
+        re.compile(r"(?im)^\s*PAR\s+CES\s+MOTIFS\b"),
+    ),
+]
+
+_DECISION_SECTION_LABELS = {
+    "VISAS": "Visas et composition",
+    "RECEVABILITE": "Sur la recevabilité du recours",
+    "FAITS": "Les faits",
+    "MOYENS_REQUERANT": "Moyens développés à l'appui du recours",
+    "MOTIFS_AUTORITE": "Motifs donnés par l'autorité contractante",
+    "OBJET": "Objet du litige",
+    "EXAMEN": "Examen du litige",
+    "DISPOSITIF": "Par ces motifs",
+}
+
+
+def chunk_decision(
+    pages: list[PageText], max_chunk_chars: int = 1500
+) -> list[Chunk]:
+    """Découpe une décision ARCOP en chunks par grandes sections.
+
+    Stratégie : on repère les en-têtes de sections canoniques (FAITS, MOYENS,
+    EXAMEN, PAR CES MOTIFS…), on délimite leurs bornes dans le texte concaténé
+    et on crée un Chunk par section. Les sections trop longues sont re-découpées
+    via ``_split_long``. Le "DISPOSITIF" (PAR CES MOTIFS) est toujours conservé
+    en un seul chunk si possible car c'est la décision proprement dite.
+    """
+    if not pages:
+        return []
+    document = pages[0].document
+    decision_number = pages[0].decision_number
+    decision_date = pages[0].decision_date
+
+    full_text, offsets = _flatten(pages)
+
+    # Trouve la 1ère occurrence de chaque section
+    found: list[tuple[int, str]] = []  # (offset, section_key)
+    for key, pattern in _DECISION_SECTIONS:
+        m = pattern.search(full_text)
+        if m:
+            found.append((m.start(), key))
+    found.sort()
+
+    if not found:
+        # Pas de section reconnue : on indexe quand même le document entier en
+        # le découpant brutalement, pour ne pas perdre le contenu.
+        return _fallback_decision_chunks(
+            full_text=full_text,
+            offsets=offsets,
+            document=document,
+            decision_number=decision_number,
+            decision_date=decision_date,
+            max_chunk_chars=max_chunk_chars,
+        )
+
+    # Crée les bornes [start, end[ pour chaque section
+    bounds: list[tuple[str, int, int]] = []
+    for i, (start, key) in enumerate(found):
+        end = found[i + 1][0] if i + 1 < len(found) else len(full_text)
+        bounds.append((key, start, end))
+
+    # Préambule (avant la 1ère section reconnue) : visas, composition, saisine.
+    first_start = found[0][0]
+    if first_start > 200:
+        bounds.insert(0, ("PREAMBULE", 0, first_start))
+
+    chunks: list[Chunk] = []
+    section_label = decision_number or document
+    for key, start, end in bounds:
+        body = full_text[start:end].strip()
+        if not body:
+            continue
+
+        page_start = _page_for_offset(offsets, start)
+        page_end = _page_for_offset(offsets, max(start, end - 1))
+        title = _DECISION_SECTION_LABELS.get(key, key.title())
+
+        sub_texts = _split_long(body, max_chunk_chars)
+        for part_idx, sub in enumerate(sub_texts):
+            chunk_id = _make_id(document, key, part_idx, page_start, start)
+            chunks.append(
+                Chunk(
+                    chunk_id=chunk_id,
+                    text=sub,
+                    article_number=key,
+                    article_title=title,
+                    document=document,
+                    volume=None,
+                    section=section_label,
+                    page_start=page_start,
+                    page_end=page_end,
+                    part=part_idx,
+                    doc_type="decision",
+                    decision_number=decision_number,
+                    decision_date=decision_date,
+                )
+            )
+    return chunks
+
+
+def _fallback_decision_chunks(
+    *,
+    full_text: str,
+    offsets: list[tuple[int, int]],
+    document: str,
+    decision_number: str | None,
+    decision_date: str | None,
+    max_chunk_chars: int,
+) -> list[Chunk]:
+    chunks: list[Chunk] = []
+    sub_texts = _split_long(full_text.strip(), max_chunk_chars)
+    for part_idx, sub in enumerate(sub_texts):
+        page = _page_for_offset(offsets, 0) if part_idx == 0 else 0
+        chunk_id = _make_id(document, "DECISION", part_idx, page, part_idx)
+        chunks.append(
+            Chunk(
+                chunk_id=chunk_id,
+                text=sub,
+                article_number="DECISION",
+                article_title=decision_number or document,
+                document=document,
+                volume=None,
+                section=decision_number or document,
+                page_start=page,
+                page_end=page,
+                part=part_idx,
+                doc_type="decision",
+                decision_number=decision_number,
+                decision_date=decision_date,
+            )
+        )
+    return chunks

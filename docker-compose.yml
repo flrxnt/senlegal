@@ -32,6 +32,13 @@ services:
     environment:
       MINIO_ROOT_USER: senlegal
       MINIO_ROOT_PASSWORD: senlegal_dev_secret_change_me
+      # URL publique de l'API S3 (annoncée par MinIO dans ses redirections et
+      # utilisée pour valider les signatures path-style en local). DOIT
+      # correspondre à S3_PUBLIC_URL côté backend, sinon les liens présignés
+      # générés pointeront sur "http://minio:9000" et seront inaccessibles
+      # depuis le navigateur.
+      MINIO_SERVER_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_CONSOLE_PUBLIC_URL:-http://localhost:9001}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -66,12 +73,40 @@ services:
       - "1025:1025" # SMTP
       - "8025:8025" # Web UI
 
+  chromadb:
+    image: chromadb/chroma:0.5.20
+    container_name: senlegal_chromadb
+    restart: unless-stopped
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+      ALLOW_RESET: "TRUE"
+    volumes:
+      - chromadata:/chroma/chroma
+    ports:
+      - "8002:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/bin/sh",
+          "-c",
+          "curl -fsS http://localhost:8000/api/v2/heartbeat || curl -fsS
+            http://localhost:8000/api/v1/heartbeat",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   ai:
     build:
       context: ./ai
       dockerfile: Dockerfile
     container_name: senlegal_ai
     restart: unless-stopped
+    depends_on:
+      chromadb:
+        condition: service_healthy
     environment:
       HOST: 0.0.0.0
       PORT: "8001"
@@ -85,10 +120,12 @@ services:
       # (évite le cold start sur les requêtes peu fréquentes).
       OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
       MODEL_NAME: ${MODEL_NAME:-gemma4:31b-cloud}
-      # Embeddings + Chroma (chemins absolus = ceux du Dockerfile, pas ./data)
+      # Embeddings + Chroma (service dédié)
       EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-small}
       COLLECTION_NAME: ${COLLECTION_NAME:-senlegal_v1}
-      CHROMA_DIR: /data/chroma
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: "8000"
+      CHROMA_SSL: "false"
       PROCESSED_DIR: /data/processed
       ASSETS_DIR: /assets
       # Retrieval / génération
@@ -180,3 +217,4 @@ volumes:
   miniodata:
   ai_data:
   ai_assets:
+  chromadata:

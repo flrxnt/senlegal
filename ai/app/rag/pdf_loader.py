@@ -18,6 +18,9 @@ class PageText:
     volume: str | None
     page: int
     text: str
+    doc_type: str = "code"  # "code" (Recueil) ou "decision" (CRD ARCOP)
+    decision_number: str | None = None
+    decision_date: str | None = None
 
 
 _LIGATURES = {
@@ -57,6 +60,42 @@ def _short_doc_name(filename: str) -> str:
     return Path(filename).stem
 
 
+# Reconnait les en-têtes de décision ARCOP : "DECISION N°041/2026/ARCOP/CRD/DEF"
+# (avec ou sans accents, espaces variables, et année optionnelle car certaines
+# décisions ont la forme "DÉCISION N°042 /ARCOP/CRD/DEF").
+DECISION_HEADER_RE = re.compile(
+    r"D[ÉE]CISION\s*N°?\s*(\d+)\s*(?:/\s*(\d{4})\s*)?/\s*ARCOP\s*/\s*CRD(?:\s*/\s*([A-Z]+))?",
+    re.IGNORECASE,
+)
+DECISION_DATE_RE = re.compile(
+    r"DU\s+(\d{1,2}\s*(?:er)?)\s+"
+    r"(janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[ûu]t|septembre|octobre|novembre|d[ée]cembre)\s+"
+    r"(\d{4})",
+    re.IGNORECASE,
+)
+
+
+def _detect_decision_metadata(text: str) -> tuple[str, str | None] | None:
+    """Cherche un en-tête de décision ARCOP dans le texte de la 1ère page.
+
+    Retourne (numero_decision, date_str) ou None si ce n'est pas une décision.
+    """
+    m = DECISION_HEADER_RE.search(text)
+    if not m:
+        return None
+    num, year, suffix = m.group(1), m.group(2), m.group(3)
+    suffix_part = f"/{suffix.upper()}" if suffix else ""
+    year_part = f"/{year}" if year else ""
+    decision_number = f"N°{num}{year_part}/ARCOP/CRD{suffix_part}"
+
+    date_str: str | None = None
+    md = DECISION_DATE_RE.search(text)
+    if md:
+        day = re.sub(r"\s*er\s*", "er ", md.group(1)).strip()
+        date_str = f"{day} {md.group(2).lower()} {md.group(3)}"
+    return decision_number, date_str
+
+
 def _strip_repeated_lines(pages: list[str], min_repeats: int = 3) -> list[str]:
     """Supprime les lignes (header/footer) qui se répètent sur la majorité des pages."""
     if len(pages) < min_repeats * 2:
@@ -79,10 +118,13 @@ def _strip_repeated_lines(pages: list[str], min_repeats: int = 3) -> list[str]:
     return cleaned
 
 
-def load_pdf(path: Path) -> list[PageText]:
-    """Charge un PDF et renvoie une liste de PageText nettoyés."""
-    document = _short_doc_name(path.name)
-    volume = _detect_volume(path.name)
+def load_pdf(path: Path, *, assets_dir: Path | None = None) -> list[PageText]:
+    """Charge un PDF et renvoie une liste de PageText nettoyés.
+
+    Détecte automatiquement s'il s'agit d'une décision ARCOP (via l'en-tête
+    "DECISION N°.../ARCOP/CRD" ou via le sous-dossier "decisions/") et enrichit
+    chaque PageText avec doc_type, decision_number et decision_date.
+    """
     raw_pages: list[str] = []
     logger.info("Lecture du PDF : %s", path.name)
     with pdfplumber.open(path) as pdf:
@@ -95,12 +137,42 @@ def load_pdf(path: Path) -> list[PageText]:
             raw_pages.append(txt)
 
     cleaned_pages = _strip_repeated_lines(raw_pages)
+
+    # Détection du type de document
+    in_decisions_dir = False
+    if assets_dir is not None:
+        try:
+            in_decisions_dir = "decisions" in path.relative_to(assets_dir).parts
+        except ValueError:
+            in_decisions_dir = False
+
+    decision_meta: tuple[str, str | None] | None = None
+    first_text = next((t for t in cleaned_pages if t.strip()), "")
+    if in_decisions_dir or DECISION_HEADER_RE.search(first_text):
+        decision_meta = _detect_decision_metadata(first_text)
+
+    if decision_meta:
+        decision_number, decision_date = decision_meta
+        doc_type = "decision"
+        suffix = f" du {decision_date}" if decision_date else ""
+        document = f"Décision {decision_number}{suffix}"
+        volume = None
+    else:
+        decision_number = None
+        decision_date = None
+        doc_type = "code"
+        document = _short_doc_name(path.name)
+        volume = _detect_volume(path.name)
+
     return [
         PageText(
             document=document,
             volume=volume,
             page=i + 1,
             text=_normalize(t),
+            doc_type=doc_type,
+            decision_number=decision_number,
+            decision_date=decision_date,
         )
         for i, t in enumerate(cleaned_pages)
         if t.strip()
@@ -109,10 +181,10 @@ def load_pdf(path: Path) -> list[PageText]:
 
 def load_all_pdfs(assets_dir: Path) -> list[PageText]:
     pages: list[PageText] = []
-    pdfs = sorted(assets_dir.glob("*.pdf"))
+    pdfs = sorted(assets_dir.rglob("*.pdf"))
     if not pdfs:
         logger.warning("Aucun PDF trouvé dans %s", assets_dir)
     for pdf_path in pdfs:
-        pages.extend(load_pdf(pdf_path))
+        pages.extend(load_pdf(pdf_path, assets_dir=assets_dir))
     logger.info("Total pages extraites: %d", len(pages))
     return pages

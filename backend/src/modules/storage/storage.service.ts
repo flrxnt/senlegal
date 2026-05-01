@@ -34,7 +34,20 @@ export class StorageService implements OnModuleInit {
 
   constructor(private readonly config: ConfigService) {
     const endpoint = config.get<string>('S3_ENDPOINT') ?? 'http://localhost:9000';
-    const publicUrl = config.get<string>('S3_PUBLIC_URL') || endpoint;
+    const rawPublicUrl = config.get<string>('S3_PUBLIC_URL');
+    const publicUrl = rawPublicUrl?.trim() ? rawPublicUrl.trim() : endpoint;
+    if (!rawPublicUrl?.trim()) {
+      this.logger.warn(
+        `S3_PUBLIC_URL non défini : les URLs présignées utiliseront l'endpoint interne (${endpoint}) ` +
+        `et seront inaccessibles depuis un navigateur. Définir S3_PUBLIC_URL=https://files.<domaine>.`,
+      );
+    } else if (publicUrl.includes('://minio')) {
+      this.logger.warn(
+        `S3_PUBLIC_URL pointe sur un nom de service interne (${publicUrl}). ` +
+        `Les liens générés ne seront pas atteignables depuis un navigateur. ` +
+        `Utiliser le FQDN public exposé par Caddy / Traefik.`,
+      );
+    }
     const region = config.get<string>('S3_REGION') ?? 'us-east-1';
     const accessKeyId = config.get<string>('S3_ACCESS_KEY') ?? 'minio';
     const secretAccessKey = config.get<string>('S3_SECRET_KEY') ?? 'minio12345';
@@ -108,6 +121,16 @@ export class StorageService implements OnModuleInit {
   async getStream(bucket: string, key: string): Promise<Readable> {
     const out = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
     return out.Body as Readable;
+  }
+
+  async getBuffer(bucket: string, key: string): Promise<Buffer> {
+    const out = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const body = out.Body as Readable;
+    const chunks: Buffer[] = [];
+    for await (const chunk of body) {
+      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : Buffer.from(chunk as Uint8Array));
+    }
+    return Buffer.concat(chunks);
   }
 
   async exists(bucket: string, key: string): Promise<boolean> {

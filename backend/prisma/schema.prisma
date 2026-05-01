@@ -50,6 +50,13 @@ enum DocumentKind {
   CHAT_ATTACHMENT
 }
 
+enum IngestStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
 enum MessageRole {
   USER
   ASSISTANT
@@ -155,25 +162,29 @@ model Message {
 // ---------------------------------------------------------------------------
 
 model Document {
-  id          String       @id @default(cuid())
-  ownerId     String?
-  kind        DocumentKind
-  bucket      String
-  objectKey   String
-  filename    String
-  contentType String
-  sizeBytes   Int
-  checksum    String?
-  metadata    Json?
-  ingestedAt  DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  ownerId         String?
+  kind            DocumentKind
+  bucket          String
+  objectKey       String
+  filename        String
+  contentType     String
+  sizeBytes       Int
+  checksum        String?
+  metadata        Json?
+  ingestedAt      DateTime?
+  ingestStatus    IngestStatus @default(READY)
+  ingestStartedAt DateTime?
+  ingestError     String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@unique([bucket, objectKey])
   @@index([ownerId, kind, createdAt])
   @@index([kind, createdAt])
+  @@index([kind, ingestStatus])
 }
 
 // ---------------------------------------------------------------------------

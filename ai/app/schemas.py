@@ -47,6 +47,8 @@ class HealthResponse(BaseModel):
     embedder_loaded: bool
     chunks_indexed: int
     collection: str
+    chroma_ok: bool = True
+    chroma_mode: Literal["http", "persistent"] = "persistent"
 
 
 class IngestResponse(BaseModel):

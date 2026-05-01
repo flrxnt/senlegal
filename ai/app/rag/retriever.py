@@ -23,6 +23,9 @@ class RetrievedChunk:
     volume: str | None
     section: str | None
     page: int
+    doc_type: str = "code"
+    decision_number: str | None = None
+    decision_date: str | None = None
 
 
 def _query_collection(
@@ -65,6 +68,9 @@ def _query_collection(
                 volume=meta.get("volume"),
                 section=meta.get("section"),
                 page=int(meta.get("page_start", 0) or 0),
+                doc_type=str(meta.get("doc_type", "code")) or "code",
+                decision_number=(meta.get("decision_number") or None),
+                decision_date=(meta.get("decision_date") or None),
             )
         )
     return chunks

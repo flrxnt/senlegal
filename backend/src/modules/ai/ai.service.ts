@@ -126,21 +126,46 @@ export class AiService {
     return (await res.json()) as { results: AiCitation[] };
   }
 
-  async ingest(buffer: Buffer, filename: string, contentType: string): Promise<unknown> {
+  async ingest(
+    buffer: Buffer,
+    filename: string,
+    contentType: string,
+    sourceId: string,
+  ): Promise<unknown> {
     const headers: Record<string, string> = {};
     if (this.apiKey) headers['X-API-Key'] = this.apiKey;
     if (this.adminToken) headers['X-Admin-Token'] = this.adminToken;
     const form = new FormData();
     const blob = new Blob([new Uint8Array(buffer)], { type: contentType });
     form.append('file', blob, filename);
-    const res = await fetch(`${this.baseUrl}/ingest`, {
+    form.append('source_id', sourceId);
+    // Pas de timeout court : l'embedding peut prendre plusieurs minutes pour
+    // un PDF volumineux. On laisse fetch attendre.
+    const res = await fetch(`${this.baseUrl}/ingest/file`, {
       method: 'POST',
       headers,
       body: form as unknown as BodyInit,
     });
     if (!res.ok) {
       const txt = await res.text().catch(() => '');
-      throw new BadGatewayException(`AI /ingest error ${res.status}: ${txt}`);
+      throw new BadGatewayException(`AI /ingest/file error ${res.status}: ${txt}`);
+    }
+    return res.json().catch(() => ({}));
+  }
+
+  async deleteIngestSource(sourceId: string): Promise<unknown> {
+    const headers: Record<string, string> = {};
+    if (this.apiKey) headers['X-API-Key'] = this.apiKey;
+    if (this.adminToken) headers['X-Admin-Token'] = this.adminToken;
+    const res = await fetch(
+      `${this.baseUrl}/ingest/source/${encodeURIComponent(sourceId)}`,
+      { method: 'DELETE', headers },
+    );
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new BadGatewayException(
+        `AI /ingest/source error ${res.status}: ${txt}`,
+      );
     }
     return res.json().catch(() => ({}));
   }

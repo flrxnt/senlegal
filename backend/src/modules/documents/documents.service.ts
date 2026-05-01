@@ -2,10 +2,11 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AnalyticsEventType, DocumentKind, Plan, UserRole } from '@prisma/client';
+import { AnalyticsEventType, DocumentKind, IngestStatus, Plan, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AiService } from '../ai/ai.service';
@@ -14,6 +15,7 @@ import { AnalyticsService } from '../analytics/analytics.service';
 
 @Injectable()
 export class DocumentsService {
+  private readonly logger = new Logger('DocumentsService');
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
@@ -110,19 +112,17 @@ export class DocumentsService {
     if (file.size > maxMb * 1024 * 1024) {
       throw new BadRequestException(`Fichier trop volumineux (max ${maxMb} MB).`);
     }
+    if (file.mimetype && !file.mimetype.toLowerCase().includes('pdf')) {
+      throw new BadRequestException('Seuls les fichiers PDF sont acceptés.');
+    }
+    // 1. Upload vers MinIO (source de vérité — la ré-indexation re-télécharge depuis ici)
     const { bucket, key } = await this.storage.upload({
       prefix: 'rag/sources',
       filename: file.originalname,
       contentType: file.mimetype,
       body: file.buffer,
     });
-    let ingestResult: unknown = null;
-    try {
-      ingestResult = await this.ai.ingest(file.buffer, file.originalname, file.mimetype);
-    } catch (e) {
-      // Persist record anyway so admin can retry.
-      ingestResult = { error: (e as Error).message };
-    }
+    // 2. Persiste le Document en statut PENDING (admin voit immédiatement la source)
     const doc = await this.prisma.document.create({
       data: {
         ownerId: adminId,
@@ -132,17 +132,107 @@ export class DocumentsService {
         filename: file.originalname,
         contentType: file.mimetype,
         sizeBytes: file.size,
-        ingestedAt: new Date(),
-        metadata: ingestResult ? (ingestResult as object) : undefined,
+        ingestStatus: IngestStatus.PENDING,
       },
     });
+    // 3. Lance l'indexation AI en arrière-plan, sans bloquer la réponse HTTP.
+    //    Le frontend peut poller /admin/rag/sources pour suivre le statut.
+    this.runIngestionInBackground(doc.id, file.buffer, file.originalname, file.mimetype);
     return doc;
+  }
+
+  /** Re-déclenche l'indexation pour une source existante (re-télécharge depuis MinIO). */
+  async reingestRagSource(id: string) {
+    const doc = await this.prisma.document.findUnique({ where: { id } });
+    if (doc?.kind !== DocumentKind.RAG_SOURCE) throw new NotFoundException();
+    if (doc.ingestStatus === IngestStatus.PROCESSING) {
+      throw new BadRequestException('Une indexation est déjà en cours pour ce document.');
+    }
+    const updated = await this.prisma.document.update({
+      where: { id },
+      data: {
+        ingestStatus: IngestStatus.PENDING,
+        ingestError: null,
+      },
+    });
+    // Pull bytes depuis MinIO puis lance l'ingestion en arrière-plan.
+    this.storage
+      .getBuffer(doc.bucket, doc.objectKey)
+      .then((buffer) =>
+        this.runIngestionInBackground(doc.id, buffer, doc.filename, doc.contentType),
+      )
+      .catch(async (e) => {
+        this.logger.error(`reingest ${id} download failed: ${(e as Error).message}`);
+        await this.prisma.document
+          .update({
+            where: { id },
+            data: {
+              ingestStatus: IngestStatus.FAILED,
+              ingestError: `Téléchargement MinIO impossible : ${(e as Error).message}`,
+            },
+          })
+          .catch(() => undefined);
+      });
+    return updated;
+  }
+
+  /** Déclenche l'ingestion AI en arrière-plan et met à jour le statut du Document. */
+  private runIngestionInBackground(
+    docId: string,
+    buffer: Buffer,
+    filename: string,
+    contentType: string,
+  ): void {
+    void (async () => {
+      const startedAt = new Date();
+      try {
+        await this.prisma.document.update({
+          where: { id: docId },
+          data: {
+            ingestStatus: IngestStatus.PROCESSING,
+            ingestStartedAt: startedAt,
+            ingestError: null,
+          },
+        });
+        const result = await this.ai.ingest(buffer, filename, contentType, docId);
+        await this.prisma.document.update({
+          where: { id: docId },
+          data: {
+            ingestStatus: IngestStatus.READY,
+            ingestedAt: new Date(),
+            ingestError: null,
+            metadata: result ? (result as object) : undefined,
+          },
+        });
+        this.logger.log(`ingestion ok doc=${docId} (${filename})`);
+      } catch (e) {
+        const msg = (e as Error).message ?? String(e);
+        this.logger.error(`ingestion failed doc=${docId}: ${msg}`);
+        await this.prisma.document
+          .update({
+            where: { id: docId },
+            data: {
+              ingestStatus: IngestStatus.FAILED,
+              ingestError: msg.slice(0, 1000),
+            },
+          })
+          .catch(() => undefined);
+      }
+    })();
   }
 
   async deleteRagSource(id: string) {
     const doc = await this.prisma.document.findUnique({ where: { id } });
-    if (!doc || doc.kind !== DocumentKind.RAG_SOURCE) throw new NotFoundException();
-    await this.storage.delete(doc.bucket, doc.objectKey).catch(() => { });
+    if (doc?.kind !== DocumentKind.RAG_SOURCE) throw new NotFoundException();
+    // 1. Désindexe côté AI (best-effort — on n'empêche pas la suppression si l'AI est down)
+    await this.ai.deleteIngestSource(id).catch((e) => {
+      this.logger.warn(`AI deleteIngestSource ${id} failed: ${(e as Error).message}`);
+    });
+    // 2. Supprime le binaire dans MinIO
+    await this.storage.delete(doc.bucket, doc.objectKey).catch((e) => {
+      this.logger.warn(`MinIO delete ${doc.objectKey} failed: ${(e as Error).message}`);
+    });
+    // 3. Supprime la ligne Postgres
     await this.prisma.document.delete({ where: { id } });
     return { ok: true };
   }
