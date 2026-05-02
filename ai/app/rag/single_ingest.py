@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 from ..config import get_settings
 from .chunker import chunk_documents
@@ -20,12 +21,15 @@ from .vectorstore import get_collection
 
 logger = logging.getLogger(__name__)
 
+ProgressCallback = Callable[[int, int], None]
+
 
 def ingest_pdf_bytes(
     *,
     pdf_bytes: bytes,
     filename: str,
     source_id: str,
+    on_progress: ProgressCallback | None = None,
 ) -> dict:
     """Indexe un PDF unique en mémoire dans Chroma sous ``source_id``.
 
@@ -38,9 +42,6 @@ def ingest_pdf_bytes(
 
     safe_name = Path(filename).name or "document.pdf"
 
-    # Écrit dans un dossier temporaire SOUS le nom d'origine pour que le
-    # pdf_loader produise les bonnes métadonnées (volume, doc_type décision,
-    # nom court "Recueil... Volume X", etc.).
     tmp_dir = Path(tempfile.mkdtemp(prefix="ingest_"))
     tmp_path = tmp_dir / safe_name
     tmp_path.write_bytes(pdf_bytes)
@@ -66,14 +67,11 @@ def ingest_pdf_bytes(
 
     col = get_collection(settings.chroma_path, settings.collection_name)
 
-    # Désindexe d'abord les chunks existants pour ce source_id (re-ingest sûr).
     try:
         col.delete(where={"source_id": source_id})
     except Exception as exc:  # noqa: BLE001
         logger.warning("Suppression préalable source_id=%s : %s", source_id, exc)
 
-    # Idempotence par chunk_id (au cas où le même PDF serait uploadé plusieurs
-    # fois sous des source_id différents).
     existing = set(col.get(include=[]).get("ids", []))
     if existing:
         ids_to_drop = [c.chunk_id for c in chunks if c.chunk_id in existing]
@@ -99,6 +97,8 @@ def ingest_pdf_bytes(
             embeddings=[v.tolist() for v in vectors],
         )
         total += len(sub)
+        if on_progress:
+            on_progress(total, len(chunks))
         logger.info(
             "[source_id=%s] indexé %d / %d chunks", source_id, total, len(chunks)
         )

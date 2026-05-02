@@ -132,25 +132,57 @@ export class AiService {
     contentType: string,
     sourceId: string,
   ): Promise<unknown> {
-    const headers: Record<string, string> = {};
-    if (this.apiKey) headers['X-API-Key'] = this.apiKey;
-    if (this.adminToken) headers['X-Admin-Token'] = this.adminToken;
+    const adminHeaders: Record<string, string> = {};
+    if (this.apiKey) adminHeaders['X-API-Key'] = this.apiKey;
+    if (this.adminToken) adminHeaders['X-Admin-Token'] = this.adminToken;
+
+    // 1. Soumet le fichier — retourne 202 immédiatement.
     const form = new FormData();
     const blob = new Blob([new Uint8Array(buffer)], { type: contentType });
     form.append('file', blob, filename);
     form.append('source_id', sourceId);
-    // Pas de timeout court : l'embedding peut prendre plusieurs minutes pour
-    // un PDF volumineux. On laisse fetch attendre.
-    const res = await fetch(`${this.baseUrl}/ingest/file`, {
+
+    const submitRes = await fetch(`${this.baseUrl}/ingest/file`, {
       method: 'POST',
-      headers,
+      headers: adminHeaders,
       body: form as unknown as BodyInit,
     });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      throw new BadGatewayException(`AI /ingest/file error ${res.status}: ${txt}`);
+    if (!submitRes.ok) {
+      const txt = await submitRes.text().catch(() => '');
+      throw new BadGatewayException(`AI /ingest/file error ${submitRes.status}: ${txt}`);
     }
-    return res.json().catch(() => ({}));
+
+    // 2. Poll le statut jusqu'à complétion ou échec.
+    const pollIntervalMs = 5_000;
+    const maxWaitMs = 60 * 60_000; // 1 h max
+    const start = Date.now();
+
+    while (Date.now() - start < maxWaitMs) {
+      await sleep(pollIntervalMs);
+      try {
+        const statusRes = await fetch(
+          `${this.baseUrl}/ingest/status/${encodeURIComponent(sourceId)}`,
+          { headers: { ...adminHeaders, 'Content-Type': 'application/json' } },
+        );
+        if (!statusRes.ok) continue;
+        const data = (await statusRes.json()) as Record<string, unknown>;
+        const s = data.status as string;
+
+        if (s === 'ok' || s === 'empty') return data;
+        if (s === 'failed') {
+          throw new BadGatewayException(`AI ingestion failed: ${data.error ?? 'unknown'}`);
+        }
+        if (s === 'processing') {
+          const done = data.chunks_done ?? 0;
+          const total = data.chunks_total ?? '?';
+          this.logger.log(`ingest ${sourceId}: ${done}/${total} chunks`);
+        }
+      } catch (e) {
+        if (e instanceof BadGatewayException) throw e;
+        this.logger.warn(`ingest poll error: ${(e as Error).message}`);
+      }
+    }
+    throw new BadGatewayException(`AI ingestion timeout after ${maxWaitMs / 60_000} min`);
   }
 
   async deleteIngestSource(sourceId: string): Promise<unknown> {
