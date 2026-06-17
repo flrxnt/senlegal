@@ -1078,15 +1078,24 @@
 				});
 				const dots = [...dotsContainer.querySelectorAll("button")];
 
-				function goTo(idx) {
-					if (idx < 0 || idx >= slides.length) return;
-					slides[current].classList.remove("active");
-					slides[current].classList.add(idx > current ? "prev" : "");
-					current = idx;
-					slides.forEach((s) => s.classList.remove("prev"));
-					slides[current].classList.add("active");
-					updateUI();
+			function goTo(idx) {
+				if (idx < 0 || idx >= slides.length) return;
+				const forward = idx > current;
+				slides.forEach(s => s.classList.remove('prev', 'next'));
+				slides[current].classList.remove('active');
+				slides[current].classList.add(forward ? 'prev' : 'next');
+				const target = slides[idx];
+				if (!forward) {
+					target.style.transition = 'none';
+					target.classList.add('prev');
+					void target.offsetHeight;
+					target.style.transition = '';
 				}
+				target.classList.remove('prev', 'next');
+				target.classList.add('active');
+				current = idx;
+				updateUI();
+			}
 
 				function updateUI() {
 					progress.style.width = ((current + 1) / slides.length) * 100 + "%";

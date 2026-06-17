@@ -50,6 +50,7 @@ html, body {
   transition: opacity .45s cubic-bezier(.4,0,.2,1), transform .45s cubic-bezier(.4,0,.2,1), visibility 0s 0s;
 }
 .slide.prev { transform: translateX(-40px); }
+.slide.next { transform: translateX(40px); }
 
 .slide--scroll { justify-content: flex-start; padding-top: 40px; padding-bottom: 40px; }
 
