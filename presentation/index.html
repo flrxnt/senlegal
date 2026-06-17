@@ -1,0 +1,1130 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>SenL&eacute;gal &mdash; Rapport Technique Complet</title>
+		<link rel="stylesheet" href="index.css" />
+	</head>
+	<body>
+		<div class="progress-bar" id="progress"></div>
+		<div class="slide-counter" id="counter"></div>
+		<div class="nav-dots" id="dots"></div>
+
+		<div class="deck" id="deck">
+			<!-- ════════════════ SLIDE 1 — COUVERTURE ════════════════ -->
+			<div class="slide slide--dark cover active">
+				<div class="cover__badge">Projet IA &middot; RAG &middot; Droit S&eacute;n&eacute;galais &middot; <em>LLM</em></div>
+				<div class="cover__divider"></div>
+				<h1>SenL&eacute;gal</h1>
+				<h2>Assistant Juridique IA sp&eacute;cialis&eacute; dans le Code des March&eacute;s Publics du S&eacute;n&eacute;gal</h2>
+				<div class="cover__meta">
+					<span>Intelligence Artificielle</span>
+					<span>NLP &middot; RAG &middot; LLM</span>
+					<span>Juin 2026</span>
+					<span>Encadrant : Dr KEITA</span>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 2 — SOMMAIRE ════════════════ -->
+			<div class="slide slide--white">
+				<div class="section-label">Sommaire</div>
+				<h1>Plan de la Pr&eacute;sentation</h1>
+				<p class="subtitle">Architecture RAG compl&egrave;te &mdash; de l'ingestion PDF &agrave; l'&eacute;valuation sur 100 questions</p>
+				<div class="cols">
+					<div>
+						<table class="s-table">
+							<tbody>
+								<tr>
+									<td><strong>1</strong></td>
+									<td>Introduction &amp; Probl&eacute;matique</td>
+								</tr>
+								<tr>
+									<td><strong>2</strong></td>
+									<td>Sources Juridiques Index&eacute;es</td>
+								</tr>
+								<tr>
+									<td><strong>3</strong></td>
+									<td>Architecture G&eacute;n&eacute;rale</td>
+								</tr>
+								<tr>
+									<td><strong>4</strong></td>
+									<td>Mod&egrave;le d'Embedding (E5)</td>
+								</tr>
+								<tr>
+									<td><strong>5</strong></td>
+									<td>Pipeline d'Ingestion (PDF &rarr; Vecteurs)</td>
+								</tr>
+								<tr>
+									<td><strong>6</strong></td>
+									<td>Pipeline de Recherche &amp; G&eacute;n&eacute;ration</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div>
+						<table class="s-table">
+							<tbody>
+								<tr>
+									<td><strong>7</strong></td>
+									<td>Syst&egrave;me Anti-Hallucination (5 couches)</td>
+								</tr>
+								<tr>
+									<td><strong>8</strong></td>
+									<td>Stack Technique &amp; D&eacute;ploiement</td>
+								</tr>
+								<tr>
+									<td><strong>9</strong></td>
+									<td>&Eacute;valuation RAG &mdash; 100 Questions</td>
+								</tr>
+								<tr>
+									<td><strong>10</strong></td>
+									<td>Analyse des R&eacute;sultats &amp; Graphiques</td>
+								</tr>
+								<tr>
+									<td><strong>11</strong></td>
+									<td>Conclusion &amp; Perspectives</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 3 — INTRODUCTION ════════════════ -->
+			<div class="slide slide--dark">
+				<div class="section-label">01 &mdash; Introduction</div>
+				<h1>Probl&eacute;matique</h1>
+				<p class="subtitle">Les textes juridiques sont complexes, volumineux et difficilement accessibles</p>
+				<ul class="checklist">
+					<li>Le Code des March&eacute;s Publics (D&eacute;cret 2022-2295) fait des centaines de pages</li>
+					<li>Le Recueil des Textes Juridiques (2023, 2 volumes) couvre l'ensemble de la commande publique</li>
+					<li>Les d&eacute;cisions ARCOP/CRD sont publi&eacute;es au fil de l'eau (jurisprudence vivante)</li>
+					<li>Les professionnels ont besoin de r&eacute;ponses rapides, cit&eacute;es et v&eacute;rifiables</li>
+					<li>Les LLM g&eacute;n&eacute;riques (GPT, Claude, Gemini) hallucinent sur le droit sp&eacute;cifique s&eacute;n&eacute;galais</li>
+				</ul>
+				<div class="infobox infobox--green" style="margin-top: 14px; border-color: var(--accent-light); background: rgba(16, 185, 129, 0.08); color: rgba(255, 255, 255, 0.85)">
+					<strong>Solution :</strong> Un assistant IA ancr&eacute; sur les textes officiels, qui cite ses sources article par article et refuse de r&eacute;pondre quand
+					l'information n'existe pas dans sa base.
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 4 — SOURCES JURIDIQUES ════════════════ -->
+			<div class="slide slide--soft">
+				<div class="section-label">02 &mdash; Corpus</div>
+				<h1>Sources Juridiques Index&eacute;es</h1>
+				<p class="subtitle">Textes officiels du droit de la commande publique s&eacute;n&eacute;galais</p>
+				<table class="s-table">
+					<thead>
+						<tr>
+							<th>Source</th>
+							<th>Contenu</th>
+							<th>Type</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><strong>D&eacute;cret 2022-2295</strong></td>
+							<td>Code des March&eacute;s Publics du 28 d&eacute;cembre 2022</td>
+							<td>L&eacute;gislation</td>
+						</tr>
+						<tr>
+							<td><strong>Recueil Vol. 1 (2023)</strong></td>
+							<td>Textes juridiques de la commande publique</td>
+							<td>Compilation</td>
+						</tr>
+						<tr>
+							<td><strong>Recueil Vol. 2 (2023)</strong></td>
+							<td>Textes compl&eacute;mentaires (ARCOP, PPP, UEMOA)</td>
+							<td>Compilation</td>
+						</tr>
+						<tr>
+							<td><strong>D&eacute;cisions ARCOP/CRD</strong></td>
+							<td>Jurisprudence (N&deg;041, 042, 043&hellip; 2026)</td>
+							<td>Jurisprudence</td>
+						</tr>
+					</tbody>
+				</table>
+				<h2>Glossaire int&eacute;gr&eacute; (expansion automatique des acronymes)</h2>
+				<dl class="glossary">
+					<dt>ARCOP</dt>
+					<dd>Autorit&eacute; de R&eacute;gulation de la Commande Publique</dd>
+					<dt>CRD</dt>
+					<dd>Comit&eacute; de R&egrave;glement des Diff&eacute;rends</dd>
+					<dt>DCMP</dt>
+					<dd>Direction Centrale des March&eacute;s Publics</dd>
+					<dt>AOO</dt>
+					<dd>Appel d'Offres Ouvert</dd>
+					<dt>AOR</dt>
+					<dd>Appel d'Offres Restreint</dd>
+					<dt>DRP</dt>
+					<dd>Demande de Renseignements et de Prix</dd>
+					<dt>DAO</dt>
+					<dd>Dossier d'Appel d'Offres</dd>
+					<dt>PPP</dt>
+					<dd>Partenariat Public-Priv&eacute;</dd>
+					<dt>PPM</dt>
+					<dd>Plan de Passation des March&eacute;s</dd>
+					<dt>CCAG</dt>
+					<dd>Cahier des Clauses Administratives G&eacute;n&eacute;rales</dd>
+					<dt>MOD</dt>
+					<dd>Ma&icirc;trise d'Ouvrage D&eacute;l&eacute;gu&eacute;e</dd>
+					<dt>ANO</dt>
+					<dd>Avis de Non-Objection</dd>
+				</dl>
+			</div>
+
+			<!-- ════════════════ SLIDE 5 — ARCHITECTURE ════════════════ -->
+			<div class="slide slide--white">
+				<div class="section-label">03 &mdash; Architecture</div>
+				<h1>Architecture Microservices</h1>
+				<p class="subtitle">4 services applicatifs + 3 services d'infrastructure &mdash; Docker Compose</p>
+				<div class="arch-grid">
+					<div class="arch-box">
+						<div class="arch-box__icon">&#x1F5A5;&#xFE0F;</div>
+						<div class="arch-box__title">Frontend</div>
+						<div class="arch-box__desc">Nuxt 4 + Vue 3 + Tailwind 4<br />SSR + Proxy Nitro<br />Port 3000</div>
+					</div>
+					<div class="arch-box">
+						<div class="arch-box__icon">&#x2699;&#xFE0F;</div>
+						<div class="arch-box__title">Backend API</div>
+						<div class="arch-box__desc">NestJS 11 + Prisma 7<br />JWT HS256 + RBAC + Throttle<br />Port 3001</div>
+					</div>
+					<div class="arch-box">
+						<div class="arch-box__icon">&#x1F9E0;</div>
+						<div class="arch-box__title">Service IA</div>
+						<div class="arch-box__desc">FastAPI + ChromaDB<br />RAG + Ollama Cloud<br />Port 8001</div>
+					</div>
+				</div>
+				<div class="arch-grid">
+					<div class="arch-box">
+						<div class="arch-box__icon">&#x1F4BE;</div>
+						<div class="arch-box__title">PostgreSQL 16</div>
+						<div class="arch-box__desc">Users, conversations<br />Documents, m&eacute;tadonn&eacute;es</div>
+					</div>
+					<div class="arch-box">
+						<div class="arch-box__icon">&#x1F50D;</div>
+						<div class="arch-box__title">ChromaDB 0.5</div>
+						<div class="arch-box__desc">Base vectorielle HNSW<br />Collection senlegal_v1</div>
+					</div>
+					<div class="arch-box">
+						<div class="arch-box__icon">&#x1F4C1;</div>
+						<div class="arch-box__title">MinIO (S3)</div>
+						<div class="arch-box__desc">Stockage objets<br />Documents, backups, avatars</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 6 — MODELE EMBEDDING ════════════════ -->
+			<div class="slide slide--dark">
+				<div class="section-label">04 &mdash; Embedding</div>
+				<h1>Mod&egrave;le d'Embedding : intfloat/multilingual-e5-small</h1>
+				<p class="subtitle">Embeddings asym&eacute;triques avec pr&eacute;fixes query/passage pour le fran&ccedil;ais juridique</p>
+				<div class="cols">
+					<div>
+						<table class="s-table">
+							<thead>
+								<tr>
+									<th>Propri&eacute;t&eacute;</th>
+									<th>Valeur</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>Dimensions</td>
+									<td><strong>384</strong></td>
+								</tr>
+								<tr>
+									<td>Param&egrave;tres</td>
+									<td><strong>~33M</strong></td>
+								</tr>
+								<tr>
+									<td>Langues</td>
+									<td><strong>100+ (fran&ccedil;ais natif)</strong></td>
+								</tr>
+								<tr>
+									<td>M&eacute;trique</td>
+									<td><strong>Similarit&eacute; cosinus</strong></td>
+								</tr>
+								<tr>
+									<td>GPU requis</td>
+									<td><strong>Non (CPU)</strong></td>
+								</tr>
+								<tr>
+									<td>Batch indexation</td>
+									<td><strong>16</strong></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">Pr&eacute;fixage asym&eacute;trique</h2>
+						<div class="code-block">
+							<span class="cmt"># Indexation (passages juridiques)</span> <span class="fn">embed_passages</span>(<span class="str">"passage: "</span> + texte)
+
+							<span class="cmt"># Recherche (question utilisateur)</span>
+							<span class="fn">embed_query</span>(<span class="str">"query: "</span> + question)
+
+							<span class="cmt"># Normalisation L2 activée</span>
+							normalize_embeddings = <span class="kw">True</span>
+						</div>
+						<p style="font-size: 0.78rem; color: rgba(255, 255, 255, 0.55); margin-top: 8px">
+							Le pr&eacute;fixage asym&eacute;trique am&eacute;liore la pertinence en distinguant le r&ocirc;le du texte (document vs requ&ecirc;te) lors de l'encodage.
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 7 — PIPELINE INGESTION ════════════════ -->
+			<div class="slide slide--soft slide--scroll">
+				<div class="section-label">05 &mdash; Ingestion</div>
+				<h1>Pipeline d'Ingestion : PDF &rarr; Vecteurs</h1>
+				<p class="subtitle">Transformation des documents juridiques en chunks vectoris&eacute;s dans ChromaDB</p>
+				<div class="pipeline">
+					<div class="pipeline__step">
+						<div class="pipeline__num">1</div>
+						<div class="pipeline__title">Parsing PDF</div>
+						<div class="pipeline__desc">pdfplumber<br />page par page</div>
+					</div>
+					<div class="pipeline__step">
+						<div class="pipeline__num">2</div>
+						<div class="pipeline__title">Nettoyage</div>
+						<div class="pipeline__desc">Ligatures, headers<br />c&eacute;sures, espaces</div>
+					</div>
+					<div class="pipeline__step">
+						<div class="pipeline__num">3</div>
+						<div class="pipeline__title">Chunking</div>
+						<div class="pipeline__desc">Par article juridique<br />Regex ARTICLE_RE</div>
+					</div>
+					<div class="pipeline__step">
+						<div class="pipeline__num">4</div>
+						<div class="pipeline__title">M&eacute;tadonn&eacute;es</div>
+						<div class="pipeline__desc">Article, section, source<br />page, volume</div>
+					</div>
+					<div class="pipeline__step">
+						<div class="pipeline__num">5</div>
+						<div class="pipeline__title">Embedding</div>
+						<div class="pipeline__desc">E5 + ChromaDB<br />HNSW cosine</div>
+					</div>
+				</div>
+				<div class="cols">
+					<div>
+						<h2>&Eacute;tape 1-2 : Extraction &amp; Nettoyage</h2>
+						<div class="code-block">
+							<span class="cmt"># Normalisation des ligatures typographiques</span> _LIGATURES = {<span class="str">"\ufb00"</span>: <span class="str">"ff"</span>,
+							<span class="str">"\ufb01"</span>: <span class="str">"fi"</span>, <span class="str">"\ufb02"</span>: <span class="str">"fl"</span>, <span class="str">"\ufb03"</span>:
+							<span class="str">"ffi"</span>}
+
+							<span class="cmt"># Recollement des mots coupés en fin de ligne</span>
+							re.sub(<span class="str">r"-\n(\w)"</span>, <span class="str">r"\1"</span>, text)
+
+							<span class="cmt"># Suppression headers/footers r&eacute;p&eacute;t&eacute;s (&ge;30% pages)</span>
+							_strip_repeated_lines(pages, min_repeats=<span class="num">3</span>)
+						</div>
+					</div>
+					<div>
+						<h2>&Eacute;tape 3 : Chunking par Article</h2>
+						<div class="code-block">
+							<span class="cmt"># D&eacute;tection des articles juridiques</span>
+							ARTICLE_RE = re.compile(
+							<span class="str">r"(?im)^\s*(?:Article|Art\.)\s+"</span>
+							<span class="str">r"(premier|\d+(?:[\-\.]\d+)?)"</span>
+							<span class="str">r"\s*[\.\:\-\—]?\s*(.*)$"</span>
+							)
+
+							<span class="cmt"># Sub-split si &gt; 1500 caract&egrave;res</span>
+							max_chunk_chars = <span class="num">1500</span>
+							<span class="cmt"># Filtrage TOC (tables des mati&egrave;res)</span>
+							<span class="cmt"># ID = SHA1(doc|art|page|offset)[:16]</span>
+						</div>
+					</div>
+				</div>
+				<div class="infobox infobox--gold">
+					<strong>D&eacute;cisions ARCOP :</strong> Chunking sp&eacute;cifique par sections canoniques (Visas, Faits, Moyens du requ&eacute;rant, Examen du litige, Dispositif).
+					D&eacute;tection automatique via DECISION_HEADER_RE + extraction du num&eacute;ro et de la date.
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 8 — PIPELINE RECHERCHE ════════════════ -->
+			<div class="slide slide--dark slide--scroll">
+				<div class="section-label">06 &mdash; Recherche &amp; G&eacute;n&eacute;ration</div>
+				<h1>Pipeline RAG Complet</h1>
+				<p class="subtitle">5 &eacute;tapes : de la question utilisateur &agrave; la r&eacute;ponse cit&eacute;e</p>
+				<div class="pipeline">
+					<div class="pipeline__step">
+						<div class="pipeline__num">1</div>
+						<div class="pipeline__title">Query Rewrite</div>
+						<div class="pipeline__desc">LLM corrige orthographe<br />temp=0, top_p=0.1</div>
+					</div>
+					<div class="pipeline__step">
+						<div class="pipeline__num">2</div>
+						<div class="pipeline__title">Keywords</div>
+						<div class="pipeline__desc">Extraction termes juridiques<br />+ synonymes + acronymes</div>
+					</div>
+					<div class="pipeline__step">
+						<div class="pipeline__num">3</div>
+						<div class="pipeline__title">Multi-Query</div>
+						<div class="pipeline__desc">2 requ&ecirc;tes ChromaDB<br />fusion par best score</div>
+					</div>
+					<div class="pipeline__step">
+						<div class="pipeline__num">4</div>
+						<div class="pipeline__title">G&eacute;n&eacute;ration LLM</div>
+						<div class="pipeline__desc">Gemma 4 31B<br />prompt strict + few-shot</div>
+					</div>
+					<div class="pipeline__step">
+						<div class="pipeline__num">5</div>
+						<div class="pipeline__title">Post-Validation</div>
+						<div class="pipeline__desc">V&eacute;rif citations<br />fallback d&eacute;terministe</div>
+					</div>
+				</div>
+				<div class="cols">
+					<div>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">&Eacute;tape 1 : Query Rewriting</h2>
+						<p style="font-size: 0.78rem">
+							Le LLM (Gemma 4 31B) corrige l'orthographe et la ponctuation sans modifier le sens. Garde-fou : v&eacute;rification que &ge;60% des tokens originaux sont
+							pr&eacute;serv&eacute;s.
+						</p>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">&Eacute;tape 2 : Keyword Extraction</h2>
+						<p style="font-size: 0.78rem">
+							Le LLM extrait jusqu'&agrave; 10 termes juridiques (sigles, synonymes formels). Few-shot : &laquo;pas s&eacute;lectionn&eacute;&raquo; &rarr; &laquo;candidat
+							&eacute;vinc&eacute;&raquo;, &laquo;CRD&raquo;, &laquo;recours&raquo;.
+						</p>
+					</div>
+					<div>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">&Eacute;tape 3 : Retrieval Multi-Query</h2>
+						<p style="font-size: 0.78rem">
+							Deux requ&ecirc;tes ChromaDB : question nettoy&eacute;e + question enrichie (keywords + glossaire). Fusion par chunk_id, score max. Seuil minimum :
+							<strong>0.35</strong> de similarit&eacute; cosinus. top_k = <strong>5</strong>.
+						</p>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">&Eacute;tape 4-5 : G&eacute;n&eacute;ration &amp; Validation</h2>
+						<p style="font-size: 0.78rem">
+							Prompt strict avec 3 exemples few-shot (in-scope, recours, hors-sujet). Post-validation : chaque [Article X &mdash; doc] doit exister dans le contexte. 2 tentatives,
+							puis fallback d&eacute;terministe.
+						</p>
+					</div>
+				</div>
+				<div class="metrics" style="margin-top: 14px">
+					<div class="metric">
+						<div class="metric__value">Gemma 4</div>
+						<div class="metric__label">31B via Ollama Cloud</div>
+					</div>
+					<div class="metric">
+						<div class="metric__value">0.1</div>
+						<div class="metric__label">Temperature</div>
+					</div>
+					<div class="metric">
+						<div class="metric__value">1.1</div>
+						<div class="metric__label">Repeat penalty</div>
+					</div>
+					<div class="metric">
+						<div class="metric__value">512</div>
+						<div class="metric__label">Max tokens</div>
+					</div>
+					<div class="metric">
+						<div class="metric__value">SSE</div>
+						<div class="metric__label">Streaming temps r&eacute;el</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 9 — ANTI-HALLUCINATION ════════════════ -->
+			<div class="slide slide--white slide--scroll">
+				<div class="section-label">07 &mdash; Anti-Hallucination</div>
+				<h1>5 Couches de Protection</h1>
+				<p class="subtitle">Z&eacute;ro hallucination : le syst&egrave;me refuse plut&ocirc;t que d'inventer</p>
+				<table class="s-table">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>M&eacute;canisme</th>
+							<th>Impl&eacute;mentation</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><strong>1</strong></td>
+							<td>Score minimum</td>
+							<td>min_score = 0.35 (cosinus)</td>
+							<td>Refus sans appel LLM si aucun chunk pertinent</td>
+						</tr>
+						<tr>
+							<td><strong>2</strong></td>
+							<td>Prompt strict</td>
+							<td>SYSTEM_PROMPT (10 r&egrave;gles)</td>
+							<td>Interdiction connaissances externes, citations obligatoires</td>
+						</tr>
+						<tr>
+							<td><strong>3</strong></td>
+							<td>Few-shot examples</td>
+							<td>3 exemples dans le prompt</td>
+							<td>In-scope + recours + hors-sujet &rarr; refus</td>
+						</tr>
+						<tr>
+							<td><strong>4</strong></td>
+							<td>Post-validation</td>
+							<td>STRICT_CITATION_RE + validate_citations()</td>
+							<td>Chaque [Article X &mdash; doc] v&eacute;rifi&eacute; vs contexte</td>
+						</tr>
+						<tr>
+							<td><strong>5</strong></td>
+							<td>Fallback d&eacute;terministe</td>
+							<td>_deterministic_answer()</td>
+							<td>Extrait brut du meilleur chunk (&le;800 chars)</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="cols" style="margin-top: 12px">
+					<div>
+						<div class="infobox infobox--red">
+							<strong>Texte de refus (exact) :</strong><br />&laquo;&nbsp;Je ne dispose pas de cette information dans le Code des march&eacute;s publics du
+							S&eacute;n&eacute;gal.&nbsp;&raquo;
+						</div>
+					</div>
+					<div>
+						<div class="infobox infobox--blue">
+							<strong>Regex de validation :</strong><br /><code style="font-family: var(--mono); font-size: 0.72rem">\[Article\s+([^\]\—\-]+?)\s*[—\-]\s*[^\]]+\]</code>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 10 — STACK TECHNIQUE ════════════════ -->
+			<div class="slide slide--soft slide--scroll">
+				<div class="section-label">08 &mdash; Stack</div>
+				<h1>Stack Technique</h1>
+				<p class="subtitle">Architecture production-ready containeris&eacute;e (7 containers Docker)</p>
+				<div class="cols">
+					<div>
+						<h2>Backend (TypeScript / Bun)</h2>
+						<table class="s-table">
+							<thead>
+								<tr>
+									<th>Tech</th>
+									<th>R&ocirc;le</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>NestJS 11</td>
+									<td>Framework API + injection de d&eacute;pendances</td>
+								</tr>
+								<tr>
+									<td>Prisma 7</td>
+									<td>ORM + migrations + type safety</td>
+								</tr>
+								<tr>
+									<td>PostgreSQL 16</td>
+									<td>Base relationnelle principale</td>
+								</tr>
+								<tr>
+									<td>Passport JWT HS256</td>
+									<td>Authentification + guards RBAC</td>
+								</tr>
+								<tr>
+									<td>MinIO (S3-compatible)</td>
+									<td>Stockage fichiers (docs, avatars)</td>
+								</tr>
+								<tr>
+									<td>Nodemailer</td>
+									<td>Emails transactionnels</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div>
+						<h2>Service IA (Python) &amp; Frontend</h2>
+						<table class="s-table">
+							<thead>
+								<tr>
+									<th>Tech</th>
+									<th>R&ocirc;le</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>FastAPI 0.115+</td>
+									<td>API RAG async</td>
+								</tr>
+								<tr>
+									<td>sentence-transformers 3.x</td>
+									<td>Embeddings E5 multilingue</td>
+								</tr>
+								<tr>
+									<td>ChromaDB 0.5.20</td>
+									<td>Vector store HNSW cosine</td>
+								</tr>
+								<tr>
+									<td>Ollama Cloud</td>
+									<td>LLM Gemma 4 31B</td>
+								</tr>
+								<tr>
+									<td>pdfplumber</td>
+									<td>Parsing PDF juridiques</td>
+								</tr>
+								<tr>
+									<td>Nuxt 4 + Tailwind 4</td>
+									<td>Frontend SSR</td>
+								</tr>
+								<tr>
+									<td>Caddy Server</td>
+									<td>Reverse proxy + TLS auto</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="metrics" style="margin-top: 10px">
+					<div class="metric">
+						<div class="metric__value">7</div>
+						<div class="metric__label">Containers Docker</div>
+					</div>
+					<div class="metric">
+						<div class="metric__value">3</div>
+						<div class="metric__label">Domaines TLS</div>
+					</div>
+					<div class="metric">
+						<div class="metric__value">120</div>
+						<div class="metric__label">req/min (throttle)</div>
+					</div>
+					<div class="metric">
+						<div class="metric__value">12</div>
+						<div class="metric__label">bcrypt rounds</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 11 — TESTS RAG VUE D'ENSEMBLE ════════════════ -->
+			<div class="slide slide--accent">
+				<div class="section-label" style="color: rgba(255, 255, 255, 0.6)">09 &mdash; &Eacute;valuation RAG</div>
+				<h1>Test du RAG &mdash; 100 Questions</h1>
+				<p class="subtitle" style="color: rgba(255, 255, 255, 0.7)">100 questions couvrant 10 th&eacute;matiques de la commande publique s&eacute;n&eacute;galaise</p>
+				<div class="metrics">
+					<div class="metric" style="background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2)">
+						<div class="metric__value">100%</div>
+						<div class="metric__label" style="color: rgba(255, 255, 255, 0.6)">Succ&egrave;s API (100/100)</div>
+					</div>
+					<div class="metric" style="background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2)">
+						<div class="metric__value">91%</div>
+						<div class="metric__label" style="color: rgba(255, 255, 255, 0.6)">R&eacute;ponses compl&egrave;tes</div>
+					</div>
+					<div class="metric" style="background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2)">
+						<div class="metric__value">7.3s</div>
+						<div class="metric__label" style="color: rgba(255, 255, 255, 0.6)">Temps m&eacute;dian</div>
+					</div>
+					<div class="metric" style="background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2)">
+						<div class="metric__value">5.0</div>
+						<div class="metric__label" style="color: rgba(255, 255, 255, 0.6)">Citations / r&eacute;ponse</div>
+					</div>
+					<div class="metric" style="background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2)">
+						<div class="metric__value">6 198</div>
+						<div class="metric__label" style="color: rgba(255, 255, 255, 0.6)">Tokens g&eacute;n&eacute;r&eacute;s</div>
+					</div>
+				</div>
+				<div class="cols">
+					<div>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">R&eacute;partition des r&eacute;ponses</h2>
+						<div class="test-bars">
+							<div class="test-bar">
+								<span class="test-bar__label">R&eacute;pondu</span>
+								<div class="test-bar__track"><div class="test-bar__fill test-bar__fill--green" style="width: 91%"></div></div>
+								<span class="test-bar__val">91</span>
+							</div>
+							<div class="test-bar">
+								<span class="test-bar__label">Partiel</span>
+								<div class="test-bar__track"><div class="test-bar__fill test-bar__fill--orange" style="width: 2%"></div></div>
+								<span class="test-bar__val">2</span>
+							</div>
+							<div class="test-bar">
+								<span class="test-bar__label">Refus&eacute;</span>
+								<div class="test-bar__track"><div class="test-bar__fill test-bar__fill--red" style="width: 7%"></div></div>
+								<span class="test-bar__val">7</span>
+							</div>
+						</div>
+					</div>
+					<div>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">Temps de r&eacute;ponse</h2>
+						<table class="s-table">
+							<tbody>
+								<tr>
+									<td>Moyenne</td>
+									<td><strong>13.1s</strong></td>
+								</tr>
+								<tr>
+									<td>M&eacute;diane</td>
+									<td><strong>7.3s</strong></td>
+								</tr>
+								<tr>
+									<td>P5 / P95</td>
+									<td><strong>3.8s / 42.5s</strong></td>
+								</tr>
+								<tr>
+									<td>Min / Max</td>
+									<td><strong>3.0s / 93.4s</strong></td>
+								</tr>
+								<tr>
+									<td>&Eacute;cart-type</td>
+									<td><strong>16.5s</strong></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 13 — QUALITÉ PAR CATÉGORIE ════════════════ -->
+			<div class="slide slide--white slide--scroll">
+				<div class="section-label">09 &mdash; &Eacute;valuation RAG</div>
+				<h1>R&eacute;sultats par Cat&eacute;gorie Th&eacute;matique</h1>
+				<p class="subtitle">10 cat&eacute;gories &times; 10 questions &mdash; taux de r&eacute;ponse et performance</p>
+				<table class="s-table">
+					<thead>
+						<tr>
+							<th>Cat&eacute;gorie</th>
+							<th>R&eacute;pondu</th>
+							<th>Partiel</th>
+							<th>Refus&eacute;</th>
+							<th>Taux</th>
+							<th>Temps moy.</th>
+							<th>Tokens moy.</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Cadre juridique g&eacute;n&eacute;ral</td>
+							<td><strong>10</strong></td>
+							<td>0</td>
+							<td>0</td>
+							<td class="rate-100">100%</td>
+							<td>18.4s</td>
+							<td>71</td>
+						</tr>
+						<tr>
+							<td>D&eacute;finitions</td>
+							<td><strong>10</strong></td>
+							<td>0</td>
+							<td>0</td>
+							<td class="rate-100">100%</td>
+							<td>5.9s</td>
+							<td>62</td>
+						</tr>
+						<tr>
+							<td>Champ d'application</td>
+							<td><strong>9</strong></td>
+							<td>0</td>
+							<td>1</td>
+							<td class="rate-90">90%</td>
+							<td>15.8s</td>
+							<td>52</td>
+						</tr>
+						<tr>
+							<td>Proc&eacute;dures de passation</td>
+							<td><strong>10</strong></td>
+							<td>0</td>
+							<td>0</td>
+							<td class="rate-100">100%</td>
+							<td>11.6s</td>
+							<td>65</td>
+						</tr>
+						<tr>
+							<td>Garanties et ex&eacute;cution</td>
+							<td><strong>9</strong></td>
+							<td>0</td>
+							<td>1</td>
+							<td class="rate-90">90%</td>
+							<td>10.2s</td>
+							<td>76</td>
+						</tr>
+						<tr>
+							<td>Achats durables et PME</td>
+							<td><strong>9</strong></td>
+							<td>0</td>
+							<td>1</td>
+							<td class="rate-90">90%</td>
+							<td>7.5s</td>
+							<td>61</td>
+						</tr>
+						<tr>
+							<td>Organes (ARCOP/DCMP)</td>
+							<td><strong>10</strong></td>
+							<td>0</td>
+							<td>0</td>
+							<td class="rate-100">100%</td>
+							<td>8.9s</td>
+							<td>64</td>
+						</tr>
+						<tr>
+							<td>PPP et concessions</td>
+							<td><strong>8</strong></td>
+							<td>1</td>
+							<td>1</td>
+							<td class="rate-80">80%</td>
+							<td>17.3s</td>
+							<td>60</td>
+						</tr>
+						<tr>
+							<td>Directives UEMOA</td>
+							<td><strong>8</strong></td>
+							<td>1</td>
+							<td>1</td>
+							<td class="rate-80">80%</td>
+							<td>24.5s</td>
+							<td>52</td>
+						</tr>
+						<tr>
+							<td>Questions transversales</td>
+							<td><strong>8</strong></td>
+							<td>0</td>
+							<td>2</td>
+							<td class="rate-80">80%</td>
+							<td>11.1s</td>
+							<td>58</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="infobox infobox--green" style="margin-top: 10px">
+					<strong>Analyse :</strong> 4 cat&eacute;gories obtiennent 100% (cadre g&eacute;n&eacute;ral, d&eacute;finitions, proc&eacute;dures, organes). Les refus se concentrent sur
+					les concepts absents du corpus (COA, concession d'am&eacute;nagement, charte d'&eacute;thique). Le temps le plus &eacute;lev&eacute; (24.5s) concerne les directives UEMOA
+					qui n&eacute;cessitent un retrieval plus complexe.
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 14 — GRAPHIQUES 1 ════════════════ -->
+			<div class="slide slide--soft slide--scroll">
+				<div class="section-label">10 &mdash; Graphiques</div>
+				<h1>Visualisations des R&eacute;sultats (1/2)</h1>
+				<p class="subtitle">G&eacute;n&eacute;r&eacute;s automatiquement &agrave; partir des 100 tests sur l'API de production</p>
+				<div class="chart-grid">
+					<div class="chart-card">
+						<img src="rag_charts/01_quality_donut.png" alt="Qualit&eacute; globale" />
+						<div class="chart-card__caption">Qualit&eacute; globale des r&eacute;ponses (91 r&eacute;pondu / 2 partiel / 7 refus&eacute;)</div>
+					</div>
+					<div class="chart-card">
+						<img src="rag_charts/02_response_time_hist.png" alt="Distribution temps" />
+						<div class="chart-card__caption">Distribution des temps de r&eacute;ponse (m&eacute;diane 7.3s)</div>
+					</div>
+					<div class="chart-card">
+						<img src="rag_charts/04_category_quality.png" alt="Qualit&eacute; par cat&eacute;gorie" />
+						<div class="chart-card__caption">Qualit&eacute; des r&eacute;ponses par cat&eacute;gorie th&eacute;matique</div>
+					</div>
+					<div class="chart-card">
+						<img src="rag_charts/07_similarity_scores.png" alt="Scores similarit&eacute;" />
+						<div class="chart-card__caption">Scores de similarit&eacute; cosinus par question</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 15 — GRAPHIQUES 2 ════════════════ -->
+			<div class="slide slide--white slide--scroll">
+				<div class="section-label">10 &mdash; Graphiques</div>
+				<h1>Visualisations des R&eacute;sultats (2/2)</h1>
+				<p class="subtitle">Performance d&eacute;taill&eacute;e, tokens et sources documentaires</p>
+				<div class="chart-grid">
+					<div class="chart-card">
+						<img src="rag_charts/03_response_time_scatter.png" alt="Temps par question" />
+						<div class="chart-card__caption">Temps de r&eacute;ponse par question (vert=r&eacute;pondu, rouge=refus&eacute;)</div>
+					</div>
+					<div class="chart-card">
+						<img src="rag_charts/05_category_time.png" alt="Temps par cat&eacute;gorie" />
+						<div class="chart-card__caption">Temps moyen par cat&eacute;gorie th&eacute;matique</div>
+					</div>
+					<div class="chart-card">
+						<img src="rag_charts/08_score_distribution.png" alt="Distribution scores" />
+						<div class="chart-card__caption">Distribution des scores de similarit&eacute; (toutes citations)</div>
+					</div>
+					<div class="chart-card">
+						<img src="rag_charts/09_top_sources.png" alt="Top sources" />
+						<div class="chart-card__caption">Sources documentaires les plus cit&eacute;es dans les r&eacute;ponses</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 16 — QUESTIONS REFUSÉES ════════════════ -->
+			<div class="slide slide--dark slide--scroll">
+				<div class="section-label">09 &mdash; &Eacute;valuation RAG</div>
+				<h1>Questions Refus&eacute;es &amp; Partielles (9/100)</h1>
+				<p class="subtitle">Le syst&egrave;me anti-hallucination pr&eacute;f&egrave;re refuser que d'inventer</p>
+				<table class="s-table" style="font-size: 0.74rem">
+					<thead>
+						<tr>
+							<th>Q#</th>
+							<th>Question</th>
+							<th>Statut</th>
+							<th>Raison</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>28</td>
+							<td>Missions diplomatiques &agrave; l'&eacute;tranger</td>
+							<td><span class="badge badge--red">Refus&eacute;</span></td>
+							<td>Hors corpus</td>
+						</tr>
+						<tr>
+							<td>48</td>
+							<td>Assurances du ma&icirc;tre d'&oelig;uvre</td>
+							<td><span class="badge badge--red">Refus&eacute;</span></td>
+							<td>D&eacute;tail non index&eacute;</td>
+						</tr>
+						<tr>
+							<td>54</td>
+							<td>Charte de l'&eacute;thique</td>
+							<td><span class="badge badge--red">Refus&eacute;</span></td>
+							<td>Texte non index&eacute;</td>
+						</tr>
+						<tr>
+							<td>73</td>
+							<td>PPP paiement public vs usagers</td>
+							<td><span class="badge badge--orange">Partiel</span></td>
+							<td>Infos incompl&egrave;tes dans corpus</td>
+						</tr>
+						<tr>
+							<td>76</td>
+							<td>Concession d'am&eacute;nagement</td>
+							<td><span class="badge badge--red">Refus&eacute;</span></td>
+							<td>Concept absent du corpus</td>
+						</tr>
+						<tr>
+							<td>81</td>
+							<td>R&ocirc;le du COA</td>
+							<td><span class="badge badge--red">Refus&eacute;</span></td>
+							<td>COA non index&eacute;</td>
+						</tr>
+						<tr>
+							<td>88</td>
+							<td>Consid&eacute;rations budg&eacute;taires PPP</td>
+							<td><span class="badge badge--orange">Partiel</span></td>
+							<td>Justifications absentes</td>
+						</tr>
+						<tr>
+							<td>93</td>
+							<td>Proc&eacute;dure contredisant le Code</td>
+							<td><span class="badge badge--red">Refus&eacute;</span></td>
+							<td>Hors corpus</td>
+						</tr>
+						<tr>
+							<td>95</td>
+							<td>Contrat de travail vs march&eacute;</td>
+							<td><span class="badge badge--red">Refus&eacute;</span></td>
+							<td>Hors corpus</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="infobox infobox--gold" style="margin-top: 12px">
+					<strong>Validation du syst&egrave;me anti-hallucination :</strong> Les 7 refus et 2 r&eacute;ponses partielles correspondent &agrave; des informations effectivement
+					absentes du corpus index&eacute;. Z&eacute;ro faux positif (hallucination) d&eacute;tect&eacute; sur 100 questions. Le RAG refuse correctement plut&ocirc;t que
+					d'inventer.
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 17 — STATISTIQUES TOKENS & SCORES ════════════════ -->
+			<div class="slide slide--soft">
+				<div class="section-label">10 &mdash; Statistiques</div>
+				<h1>M&eacute;triques D&eacute;taill&eacute;es</h1>
+				<p class="subtitle">Statistiques compl&egrave;tes des 100 tests automatis&eacute;s</p>
+				<div class="cols">
+					<div>
+						<h2>Tokens g&eacute;n&eacute;r&eacute;s</h2>
+						<table class="s-table">
+							<tbody>
+								<tr>
+									<td>Total</td>
+									<td><strong>6 198 tokens</strong></td>
+								</tr>
+								<tr>
+									<td>Moyenne</td>
+									<td><strong>62 tokens/r&eacute;ponse</strong></td>
+								</tr>
+								<tr>
+									<td>M&eacute;diane</td>
+									<td><strong>57 tokens</strong></td>
+								</tr>
+								<tr>
+									<td>Min / Max</td>
+									<td><strong>4 / 144 tokens</strong></td>
+								</tr>
+							</tbody>
+						</table>
+						<h2>Temps de r&eacute;ponse</h2>
+						<table class="s-table">
+							<tbody>
+								<tr>
+									<td>P5</td>
+									<td><strong>3.8s</strong></td>
+								</tr>
+								<tr>
+									<td>P25 (Q1)</td>
+									<td><strong>5.3s</strong></td>
+								</tr>
+								<tr>
+									<td>P50 (m&eacute;diane)</td>
+									<td><strong>7.3s</strong></td>
+								</tr>
+								<tr>
+									<td>P75 (Q3)</td>
+									<td><strong>11.5s</strong></td>
+								</tr>
+								<tr>
+									<td>P95</td>
+									<td><strong>42.5s</strong></td>
+								</tr>
+								<tr>
+									<td>P99</td>
+									<td><strong>87.1s</strong></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div>
+						<h2>Protocole de test</h2>
+						<ul class="checklist">
+							<li>100 questions r&eacute;dig&eacute;es manuellement</li>
+							<li>10 cat&eacute;gories th&eacute;matiques &times; 10 questions</li>
+							<li>API de production (senlegal.flrxnt.com)</li>
+							<li>Endpoint POST /api/chat/conversations/:id/stream</li>
+							<li>Authentification JWT Bearer</li>
+							<li>topK = 5 pour chaque question</li>
+							<li>D&eacute;lai de 2.5s entre chaque question</li>
+							<li>Nouvelle conversation tous les 20 questions</li>
+							<li>Dur&eacute;e totale : ~26 minutes</li>
+						</ul>
+						<div class="infobox infobox--blue" style="margin-top: 8px">
+							<strong>Classification automatique :</strong> R&eacute;pondu (contenu substantiel), Partiel (r&eacute;ponse avec aveu d'incompl&eacute;tude), Refus&eacute; (message
+							de refus standard)
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 18 — BILAN ════════════════ -->
+			<div class="slide slide--accent">
+				<div class="section-label" style="color: rgba(255, 255, 255, 0.6)">Bilan</div>
+				<h1>Bilan &amp; Points Forts</h1>
+				<p class="subtitle" style="color: rgba(255, 255, 255, 0.7)">Valid&eacute; par 100 tests automatis&eacute;s sur l'API de production</p>
+				<div class="cols">
+					<div>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">Technique</h2>
+						<ul class="checklist">
+							<li>RAG multi-query avec enrichissement glossaire</li>
+							<li>5 couches anti-hallucination valid&eacute;es (0 faux positif)</li>
+							<li>91% de taux de r&eacute;ponse sur 100 questions</li>
+							<li>Score cosinus moyen &gt; 0.85 sur les citations</li>
+							<li>Streaming SSE token par token (UX fluide)</li>
+							<li>Mod&egrave;le E5 multilingue (fran&ccedil;ais natif, 384D)</li>
+						</ul>
+					</div>
+					<div>
+						<h2 style="color: rgba(255, 255, 255, 0.85)">Infrastructure</h2>
+						<ul class="checklist">
+							<li>Architecture microservices containeris&eacute;e (Docker)</li>
+							<li>Administration compl&egrave;te + backup automatique</li>
+							<li>S&eacute;curit&eacute; production (JWT, RBAC, throttle, bcrypt)</li>
+							<li>D&eacute;ploiement automatis&eacute; Coolify/Docker (7 containers)</li>
+							<li>3 environnements (dev, prod, Coolify)</li>
+							<li>Reverse proxy Caddy avec TLS automatique</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<!-- ════════════════ SLIDE 19 — CONCLUSION ════════════════ -->
+			<div class="slide slide--dark">
+				<div class="section-label">11 &mdash; Conclusion</div>
+				<h1>Conclusion &amp; Perspectives</h1>
+				<p class="subtitle">Un outil concret pour les professionnels du droit au S&eacute;n&eacute;gal</p>
+				<p>
+					SenL&eacute;gal d&eacute;montre qu'il est possible de construire un assistant juridique IA fiable, ancr&eacute; sur les textes officiels du droit de la commande publique
+					s&eacute;n&eacute;galais. Les tests exhaustifs sur 100 questions confirment un taux de r&eacute;ponse de 91% avec z&eacute;ro hallucination &mdash; le syst&egrave;me
+					refuse correctement quand l'information n'est pas disponible.
+				</p>
+				<h2>Perspectives</h2>
+				<ul class="checklist">
+					<li>Extension &agrave; d'autres domaines du droit s&eacute;n&eacute;galais (OHADA, droit du travail)</li>
+					<li>Fine-tuning d'un LLM local sur le corpus juridique francophone</li>
+					<li>Application mobile React Native / Expo avec support vocal (Wolof + Fran&ccedil;ais)</li>
+					<li>Partenariats institutionnels avec ARCOP et l'Ordre des Avocats</li>
+					<li>Cross-encoder pour le re-ranking des r&eacute;sultats de recherche</li>
+					<li>Indexation automatique des nouvelles d&eacute;cisions ARCOP (flux RSS)</li>
+					<li>Enrichir le corpus pour couvrir les 9 questions actuellement refus&eacute;es</li>
+				</ul>
+			</div>
+
+			<!-- ════════════════ SLIDE 20 — MERCI ════════════════ -->
+			<div class="slide slide--dark cover">
+				<div class="cover__divider"></div>
+				<h1>Merci pour votre attention</h1>
+				<h2>Questions ?</h2>
+				<div class="cover__meta">
+					<span>SenL&eacute;gal</span>
+					<span>RAG &middot; NestJS &middot; FastAPI &middot; Nuxt &middot; Ollama</span>
+					<span>Juin 2026</span>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			(() => {
+				const deck = document.getElementById("deck");
+				const slides = [...deck.querySelectorAll(".slide")];
+				const progress = document.getElementById("progress");
+				const counter = document.getElementById("counter");
+				const dotsContainer = document.getElementById("dots");
+				let current = 0;
+
+				slides.forEach((_, i) => {
+					const btn = document.createElement("button");
+					btn.addEventListener("click", () => goTo(i));
+					dotsContainer.appendChild(btn);
+				});
+				const dots = [...dotsContainer.querySelectorAll("button")];
+
+				function goTo(idx) {
+					if (idx < 0 || idx >= slides.length) return;
+					slides[current].classList.remove("active");
+					slides[current].classList.add(idx > current ? "prev" : "");
+					current = idx;
+					slides.forEach((s) => s.classList.remove("prev"));
+					slides[current].classList.add("active");
+					updateUI();
+				}
+
+				function updateUI() {
+					progress.style.width = ((current + 1) / slides.length) * 100 + "%";
+					counter.textContent = `${current + 1} / ${slides.length}`;
+					dots.forEach((d, i) => d.classList.toggle("active", i === current));
+				}
+
+				document.addEventListener("keydown", (e) => {
+					if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") {
+						e.preventDefault();
+						goTo(current + 1);
+					} else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+						e.preventDefault();
+						goTo(current - 1);
+					} else if (e.key === "Home") {
+						e.preventDefault();
+						goTo(0);
+					} else if (e.key === "End") {
+						e.preventDefault();
+						goTo(slides.length - 1);
+					}
+				});
+
+				let touchStart = null;
+				deck.addEventListener("touchstart", (e) => {
+					touchStart = e.touches[0].clientX;
+				});
+				deck.addEventListener("touchend", (e) => {
+					if (touchStart === null) return;
+					const diff = touchStart - e.changedTouches[0].clientX;
+					if (Math.abs(diff) > 50) {
+						diff > 0 ? goTo(current + 1) : goTo(current - 1);
+					}
+					touchStart = null;
+				});
+
+				updateUI();
+			})();
+		</script>
+	</body>
+</html>

@@ -1,0 +1,226 @@
+{
+  "summary": {
+    "total": 100,
+    "success_rate": "100/100 (100%)",
+    "answered": 91,
+    "partial": 2,
+    "refused": 7,
+    "answer_rate": "91/100 (91.0%)",
+    "avg_response_ms": 13115,
+    "median_response_ms": 7322,
+    "p95_response_ms": 42538,
+    "min_response_ms": 2998,
+    "max_response_ms": 93429
+  },
+  "per_category": {
+    "Cadre juridique général": {
+      "total": 10,
+      "answered": 10,
+      "partial": 0,
+      "refused": 0,
+      "avg_time_ms": 18354,
+      "avg_tokens": 71.1
+    },
+    "Définitions": {
+      "total": 10,
+      "answered": 10,
+      "partial": 0,
+      "refused": 0,
+      "avg_time_ms": 5864,
+      "avg_tokens": 61.8
+    },
+    "Champ d'application": {
+      "total": 10,
+      "answered": 9,
+      "partial": 0,
+      "refused": 1,
+      "avg_time_ms": 15759,
+      "avg_tokens": 51.9
+    },
+    "Procédures de passation": {
+      "total": 10,
+      "answered": 10,
+      "partial": 0,
+      "refused": 0,
+      "avg_time_ms": 11639,
+      "avg_tokens": 65.3
+    },
+    "Garanties et exécution": {
+      "total": 10,
+      "answered": 9,
+      "partial": 0,
+      "refused": 1,
+      "avg_time_ms": 10170,
+      "avg_tokens": 75.5
+    },
+    "Achats durables et PME": {
+      "total": 10,
+      "answered": 9,
+      "partial": 0,
+      "refused": 1,
+      "avg_time_ms": 7476,
+      "avg_tokens": 60.6
+    },
+    "Organes (ARCOP/DCMP)": {
+      "total": 10,
+      "answered": 10,
+      "partial": 0,
+      "refused": 0,
+      "avg_time_ms": 8900,
+      "avg_tokens": 63.7
+    },
+    "PPP et concessions": {
+      "total": 10,
+      "answered": 8,
+      "partial": 1,
+      "refused": 1,
+      "avg_time_ms": 17311,
+      "avg_tokens": 60.3
+    },
+    "Directives UEMOA": {
+      "total": 10,
+      "answered": 8,
+      "partial": 1,
+      "refused": 1,
+      "avg_time_ms": 24537,
+      "avg_tokens": 51.6
+    },
+    "Questions transversales": {
+      "total": 10,
+      "answered": 8,
+      "partial": 0,
+      "refused": 2,
+      "avg_time_ms": 11143,
+      "avg_tokens": 58
+    }
+  },
+  "response_times": {
+    "mean": 13115,
+    "median": 7322,
+    "stdev": 16499,
+    "p5": 3808,
+    "p25": 5314,
+    "p75": 11463,
+    "p95": 42538,
+    "p99": 87092
+  },
+  "token_stats": {
+    "mean": 62.0,
+    "median": 57,
+    "min": 4,
+    "max": 144,
+    "total": 6198
+  },
+  "citation_stats": {},
+  "quality": {},
+  "refused_questions": [
+    {
+      "number": 28,
+      "question": "Les missions diplomatiques et consulaires à l'étranger sont-elles soumises aux procédures ordinaires ?",
+      "classification": "refused",
+      "answer_preview": "Jene dispose pas de cetteinformation dans le Code desmarchés publics du Sénégal."
+    },
+    {
+      "number": 48,
+      "question": "Quelles assurances doivent être prises en charge par le maître d'œuvre ?",
+      "classification": "refused",
+      "answer_preview": "Jene dispose pas de cetteinformation dans le Code desmarchés publics du Sénégal."
+    },
+    {
+      "number": 54,
+      "question": "À quel engagement renvoie la charte de l'éthique et de la commande publique responsable ?",
+      "classification": "refused",
+      "answer_preview": "Jene dispose pas de cetteinformation dans le Code desmarchés publics du Sénégal."
+    },
+    {
+      "number": 73,
+      "question": "Quelle différence existe entre PPP à paiement public et PPP à paiement par les usagers ?",
+      "classification": "partial",
+      "answer_preview": "Lecontexte fourni ne permetpas de distinguer les deuxtypes de contrats caril ne contientaucune information relativeaux PPP à paiement public.Lesextraits précisent uniquement quepour les contrats de pa"
+    },
+    {
+      "number": 76,
+      "question": "Qu'est-ce qu'une concession d'aménagement ?",
+      "classification": "refused",
+      "answer_preview": "Jene dispose pas de cetteinformation dans le Code desmarchés publics du Sénégal."
+    },
+    {
+      "number": 81,
+      "question": "Quel est le rôle du Code des Obligations de l'Administration dans la commande publique ?",
+      "classification": "refused",
+      "answer_preview": "Jene dispose pas de cetteinformation dans le Code desmarchés publics du Sénégal."
+    },
+    {
+      "number": 88,
+      "question": "Quelles considérations budgétaires justifient le recours aux PPP ?",
+      "classification": "partial",
+      "answer_preview": "Lesextraits fournisne précisent pas les justificationsbudgétaires qui motivent le recours aux Partenariats Public-Privé (PPP),mais ilsdétaillent les obligationsdegestion financièreliées à cescontrats."
+    },
+    {
+      "number": 93,
+      "question": "Une autorité contractante peut-elle créer une procédure spécifique qui contredit le Code ?",
+      "classification": "refused",
+      "answer_preview": "Jene dispose pas de cetteinformation dans le Code desmarchés publics du Sénégal."
+    },
+    {
+      "number": 95,
+      "question": "Un contrat de travail passé par une autorité contractante relève-t-il des marchés publics ?",
+      "classification": "refused",
+      "answer_preview": "Jene dispose pas de cetteinformation dans le Code desmarchés publics du Sénégal."
+    }
+  ],
+  "slowest_questions": [
+    {
+      "number": 77,
+      "question": "Quelles sont les grandes caractéristiques de la rémunération dans un PPP à paiem",
+      "time_ms": 93429
+    },
+    {
+      "number": 90,
+      "question": "Quel lien le texte établit-il entre PPP et développement des PME ?",
+      "time_ms": 87028
+    },
+    {
+      "number": 86,
+      "question": "Quel est l'objectif général de la directive sur la maîtrise d'ouvrage publique d",
+      "time_ms": 68711
+    },
+    {
+      "number": 29,
+      "question": "Les acquisitions de mobilier national aux enchères publiques sont-elles encadrée",
+      "time_ms": 66140
+    },
+    {
+      "number": 8,
+      "question": "Quelle autorité fixe les seuils de contrôle a priori des dossiers de marchés ?",
+      "time_ms": 57797
+    }
+  ],
+  "fastest_questions": [
+    {
+      "number": 50,
+      "question": "Le contrat de maîtrise d'œuvre comporte-t-il une annexe sur la rémunération ?",
+      "time_ms": 3777
+    },
+    {
+      "number": 13,
+      "question": "Comment le décret définit-il un candidat ?",
+      "time_ms": 3689
+    },
+    {
+      "number": 54,
+      "question": "À quel engagement renvoie la charte de l'éthique et de la commande publique resp",
+      "time_ms": 3667
+    },
+    {
+      "number": 81,
+      "question": "Quel est le rôle du Code des Obligations de l'Administration dans la commande pu",
+      "time_ms": 3549
+    },
+    {
+      "number": 95,
+      "question": "Un contrat de travail passé par une autorité contractante relève-t-il des marché",
+      "time_ms": 2998
+    }
+  ]
+}
