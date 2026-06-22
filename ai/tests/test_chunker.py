@@ -193,3 +193,122 @@ def test_chunker_decision_dispositif_contains_par_ces_motifs():
     dispositif = next(c for c in chunks if c.article_number == "DISPOSITIF")
     assert "PAR CES MOTIFS" in dispositif.text
     assert "Rejette" in dispositif.text
+
+
+# ---------------------------------------------------------------------------
+# Tests Code de la Famille
+# ---------------------------------------------------------------------------
+
+FAMILLE_SAMPLE = """LIVRE PREMIER
+DES PERSONNES
+
+CHAPITRE PREMIER
+DU NOM
+
+Article premier
+Durée de la personnalité
+La personnalité commence à la naissance et cesse au décès.
+Cependant l'enfant peut acquérir des droits du jour de sa
+conception s'il naît vivant.
+
+Article 2
+Eléments constitutifs du nom
+La personne s'identifie par son ou ses prénoms et par son
+nom patronymique.
+
+Article 3
+Enfant légitime
+L'enfant légitime porte le nom de son père. En cas de désaveu,
+il prend le nom de sa mère.
+
+CHAPITRE II
+DU DOMICILE
+
+Article 12
+Définitions
+La personne est domiciliée au lieu de son principal établissement.
+
+Article 13
+Fixation légale du domicile
+(Loi n° 89-01 du 17 janvier 1989)
+Sont domiciliés:
+1°) Le mineur non émancipé chez la personne qui exerce sur
+lui le droit de garde;
+2°) Le majeur en tutelle chez son tuteur.
+
+SECTION PREMIERE
+DISPOSITIONS GENERALES
+
+Article 29
+Preuve de l'état des personnes
+L'état des personnes n'est établi et ne peut être prouvé que
+par les actes de l'état civil.
+
+Paragraphe I - Des actes de naissance
+
+Article 51
+Déclarations de naissance
+Les naissances doivent être déclarées dans le délai d'un mois.
+"""
+
+
+def _famille_pages():
+    return [PageText(document="Code de la Famille", volume=None, page=7, text=FAMILLE_SAMPLE)]
+
+
+def test_famille_detects_articles():
+    chunks = chunk_documents(_famille_pages())
+    arts = sorted(c.article_number for c in chunks)
+    assert "premier" in arts
+    assert "2" in arts
+    assert "3" in arts
+    assert "12" in arts
+    assert "13" in arts
+    assert "29" in arts
+    assert "51" in arts
+
+
+def test_famille_extracts_title_from_next_line():
+    """Le titre de l'article est sur la ligne suivante dans le Code de la Famille."""
+    chunks = chunk_documents(_famille_pages())
+    by_art = {c.article_number: c for c in chunks}
+    assert by_art["premier"].article_title == "Durée de la personnalité"
+    assert by_art["2"].article_title == "Eléments constitutifs du nom"
+    assert by_art["3"].article_title == "Enfant légitime"
+    assert by_art["12"].article_title == "Définitions"
+    assert by_art["13"].article_title == "Fixation légale du domicile"
+
+
+def test_famille_detects_loi_modificative():
+    """La référence de loi modificative est extraite dans les métadonnées."""
+    chunks = chunk_documents(_famille_pages())
+    art13 = next(c for c in chunks if c.article_number == "13")
+    assert "loi_modificative" in art13.metadata
+    assert "89-01" in art13.metadata["loi_modificative"]
+
+
+def test_famille_detects_chapitre_premier():
+    """CHAPITRE PREMIER (forme textuelle) doit être détecté comme section."""
+    chunks = chunk_documents(_famille_pages())
+    by_art = {c.article_number: c for c in chunks}
+    sec = by_art["premier"].section
+    assert sec is not None
+    assert "CHAPITRE" in sec.upper()
+
+
+def test_famille_detects_section_premiere():
+    """SECTION PREMIERE (forme textuelle) doit être détecté comme section."""
+    chunks = chunk_documents(_famille_pages())
+    by_art = {c.article_number: c for c in chunks}
+    sec = by_art["29"].section
+    assert sec is not None
+    assert "SECTION" in sec.upper()
+
+
+def test_famille_detects_paragraphe():
+    """Paragraphe I/II/III doit être détecté comme section."""
+    chunks = chunk_documents(_famille_pages())
+    by_art = {c.article_number: c for c in chunks}
+    sec = by_art["51"].section
+    assert sec is not None
+    assert "Paragraphe" in sec or "PARAGRAPHE" in sec.upper()

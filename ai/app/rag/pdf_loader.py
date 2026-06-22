@@ -1,4 +1,4 @@
-"""Extraction de texte depuis les PDFs du Recueil."""
+"""Extraction de texte depuis les PDFs juridiques sénégalais."""
 from __future__ import annotations
 
 import logging
@@ -53,10 +53,24 @@ def _detect_volume(filename: str) -> str | None:
     return f"Volume {m.group(1)}" if m else None
 
 
+_DOC_NAME_MAP: dict[str, str] = {
+    "code-de-la-famille": "Code de la Famille",
+    "code_de_la_famille": "Code de la Famille",
+    "codefamille": "Code de la Famille",
+    "code-du-travail": "Code du Travail",
+    "code-penal": "Code Pénal",
+    "code-des-obligations": "Code des Obligations Civiles et Commerciales",
+}
+
+
 def _short_doc_name(filename: str) -> str:
     vol = _detect_volume(filename)
     if vol:
         return f"Recueil des textes juridiques — {vol}"
+    stem = Path(filename).stem.lower()
+    for pattern, name in _DOC_NAME_MAP.items():
+        if pattern in stem:
+            return name
     return Path(filename).stem
 
 

@@ -17,18 +17,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential \
   && rm -rf /var/lib/apt/lists/*
 
-# Torch CPU-only (l'index par défaut tirerait CUDA = +2 Go)
-RUN pip install --prefix=/install --index-url https://download.pytorch.org/whl/cpu \
-  torch==2.4.0
-
 COPY pyproject.toml ./
 COPY app ./app
 COPY scripts ./scripts
 COPY data/chroma ./data/chroma
 COPY data/processed ./data/processed
 
-# Installe le projet et toutes ses deps dans /install
-RUN pip install --prefix=/install .
+# Installe le projet + deps. L'index CPU-only est primaire pour que torch
+# soit résolu en version CPU (~200 Mo) au lieu de CUDA (~2 Go + nvidia libs).
+# PyPI est en extra-index pour toutes les autres dépendances.
+RUN pip install --prefix=/install \
+  --index-url https://download.pytorch.org/whl/cpu \
+  --extra-index-url https://pypi.org/simple/ \
+  --timeout 120 \
+  .
 
 # Pré-télécharge le modèle d'embeddings dans /models pour éviter
 # de le retélécharger à chaque démarrage de container.

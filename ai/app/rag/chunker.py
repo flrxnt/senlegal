@@ -18,16 +18,28 @@ ARTICLE_RE = re.compile(
     r"(?im)^\s*(?:Article|Art\.)\s+(premier|\d+(?:[\-\.]\d+)?)\s*[\.\:\-\—]?\s*(.*)$",
 )
 
-# Marqueurs de sections parentes (titre, chapitre, section, livre, partie)
+# Marqueurs de sections parentes (livre, partie, titre, chapitre, section,
+# sous-section, paragraphe). Accepte chiffres romains, arabes et les formes
+# textuelles PREMIER/PREMIERE/PREMIÈRE courantes dans le Code de la Famille.
+_NUMERAL = r"(?:[IVXLC0-9]+|PREMI(?:ER|[EÈ]RE))"
 SECTION_RE = re.compile(
     r"(?im)^\s*("
-    r"LIVRE\s+[IVXLC0-9]+|"
-    r"PARTIE\s+[IVXLC0-9]+|"
-    r"TITRE\s+[IVXLC0-9]+|"
-    r"CHAPITRE\s+[IVXLC0-9]+|"
-    r"SECTION\s+[IVXLC0-9]+|"
-    r"Sous-section\s+[IVXLC0-9]+"
+    r"LIVRE\s+" + _NUMERAL + r"|"
+    r"PARTIE\s+" + _NUMERAL + r"|"
+    r"TITRE\s+" + _NUMERAL + r"|"
+    r"CHAPITRE\s+" + _NUMERAL + r"|"
+    r"SECTION\s+" + _NUMERAL + r"|"
+    r"SOUS[\s\-]SECTION\s+" + _NUMERAL + r"|"
+    r"Sous[\s\-]section\s+" + _NUMERAL + r"|"
+    r"Paragraphe\s+" + _NUMERAL + r"|"
+    r"PARAGRAPHE\s+" + _NUMERAL +
     r")\b\s*[\.\:\-\—]?\s*(.*)$",
+)
+
+# Référence de loi modificative : "(Loi n° 89-01 du 17 janvier 1989)"
+_LOI_REF_RE = re.compile(
+    r"\(Loi\s+n[°o]\s*[\d\-]+\s+du\s+\d{1,2}\s*\w+\s+\d{4}\)",
+    re.IGNORECASE,
 )
 
 
@@ -106,6 +118,45 @@ def _split_long(text: str, max_chars: int) -> list[str]:
     return final
 
 
+def _extract_title_from_body(body: str, inline_title: str) -> tuple[str, str | None]:
+    """Extrait le titre d'un article et une éventuelle référence de loi modificative.
+
+    Dans le Code de la Famille, le titre est sur la ligne suivant "Article X",
+    pas sur la même ligne. Si `inline_title` (capturé par le regex sur la même
+    ligne) est vide, on prend la première ligne non-vide du body après le header.
+
+    Retourne (titre, loi_modificative | None).
+    """
+    loi_ref: str | None = None
+    loi_match = _LOI_REF_RE.search(body[:300])
+    if loi_match:
+        loi_ref = loi_match.group(0).strip("()")
+
+    if inline_title:
+        return inline_title[:200], loi_ref
+
+    lines = body.split("\n")
+    # La 1ère ligne est le header "Article X" lui-même ; on cherche le titre
+    # dans les lignes suivantes.
+    for line in lines[1:]:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        # Ignorer les références de loi modificative
+        if stripped.startswith("(Loi ") or stripped.startswith("(loi "):
+            continue
+        # Ignorer si la ligne est trop longue (probablement du corps de texte)
+        if len(stripped) > 80:
+            break
+        # Ignorer si ça commence comme du corps (phrase commençant par une minuscule
+        # ou un déterminant long)
+        if stripped[0].islower():
+            break
+        return stripped[:200], loi_ref
+
+    return "", loi_ref
+
+
 def chunk_pages(
     pages: list[PageText], max_chunk_chars: int = 1500
 ) -> list[Chunk]:
@@ -139,14 +190,11 @@ def chunk_pages(
 
     def _is_toc(text: str) -> bool:
         """Détecte une entrée de table des matières (lignes pleines de '......')."""
-        # Beaucoup de points de conduite, ou ratio mots/ponctuation déséquilibré
         if text.count("…") + text.count("...") >= 3:
             return True
-        # Lignes courtes terminées par un n° de page : "Article 42 ......... 223"
         toc_lines = re.findall(r".{0,80}[\.\…]{3,}\s*\d{1,4}\s*$", text, flags=re.M)
         if len(toc_lines) >= 2:
             return True
-        # Très peu de mots utiles (juste le titre + chiffres)
         words = re.findall(r"[A-Za-zÀ-ÿ]{3,}", text)
         if len(words) < 8:
             return True
@@ -163,13 +211,16 @@ def chunk_pages(
             continue
 
         article_number = m.group(1).strip()
-        # Première ligne après "Article X" = titre potentiel
-        first_line = m.group(2).strip()
-        article_title = first_line[:200] if first_line else ""
+        inline_title = m.group(2).strip()
+        article_title, loi_modificative = _extract_title_from_body(body, inline_title)
 
         page_start = _page_for_offset(offsets, start)
         page_end = _page_for_offset(offsets, max(start, end - 1))
         section = section_at(start)
+
+        extra_meta: dict = {}
+        if loi_modificative:
+            extra_meta["loi_modificative"] = loi_modificative
 
         sub_texts = _split_long(body, max_chunk_chars)
         for part_idx, sub in enumerate(sub_texts):
@@ -186,6 +237,7 @@ def chunk_pages(
                     page_start=page_start,
                     page_end=page_end,
                     part=part_idx,
+                    metadata=extra_meta,
                 )
             )
     return chunks
@@ -236,18 +288,18 @@ _DECISION_SECTIONS: list[tuple[str, re.Pattern[str]]] = [
         "MOYENS_REQUERANT",
         re.compile(
             r"(?im)^\s*LES\s+(?:MOYENS|MOTIFS)"
-            r"(?:\s+D[ÉE]VELOPP[ÉE]S)?\s+(?:A|À)\s+L[’']?APPUI\s+DU\s+RECOURS\b"
+            r"(?:\s+D[ÉE]VELOPP[ÉE]S)?\s+(?:A|À)\s+L['']?APPUI\s+DU\s+RECOURS\b"
         ),
     ),
     (
         "MOTIFS_AUTORITE",
         re.compile(
-            r"(?im)^\s*LES\s+MOTIFS\s+DONN[ÉE]S\s+PAR\s+L[’']?AUTORIT[ÉE]\s+CONTRACTANTE\b"
+            r"(?im)^\s*LES\s+MOTIFS\s+DONN[ÉE]S\s+PAR\s+L['']?AUTORIT[ÉE]\s+CONTRACTANTE\b"
         ),
     ),
     (
         "OBJET",
-        re.compile(r"(?im)^\s*(?:L[’']?\s*)?OBJET\s+DU\s+LITIGE\b"),
+        re.compile(r"(?im)^\s*(?:L['']?\s*)?OBJET\s+DU\s+LITIGE\b"),
     ),
     (
         "EXAMEN",
