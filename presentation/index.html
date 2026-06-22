@@ -17,7 +17,7 @@
 				<div class="cover__badge">Projet IA &middot; RAG &middot; Droit S&eacute;n&eacute;galais &middot; <em>LLM</em></div>
 				<div class="cover__divider"></div>
 				<h1>SenL&eacute;gal</h1>
-				<h2>Assistant Juridique IA sp&eacute;cialis&eacute; dans le Code des March&eacute;s Publics du S&eacute;n&eacute;gal</h2>
+				<h2>Assistant Juridique IA sp&eacute;cialis&eacute; dans le Code de la Famille du S&eacute;n&eacute;gal</h2>
 				<div class="cover__meta">
 					<span>Intelligence Artificielle</span>
 					<span>NLP &middot; RAG &middot; LLM</span>
@@ -30,7 +30,7 @@
 			<div class="slide slide--white">
 				<div class="section-label">Sommaire</div>
 				<h1>Plan de la Pr&eacute;sentation</h1>
-				<p class="subtitle">Architecture RAG compl&egrave;te &mdash; de l'ingestion PDF &agrave; l'&eacute;valuation sur 100 questions</p>
+				<p class="subtitle">Architecture RAG compl&egrave;te &mdash; de l'ingestion du Code de la Famille &agrave; l'&eacute;valuation sur 100 questions</p>
 				<div class="cols">
 					<div>
 						<table class="s-table">
@@ -95,89 +95,109 @@
 			<div class="slide slide--dark">
 				<div class="section-label">01 &mdash; Introduction</div>
 				<h1>Probl&eacute;matique</h1>
-				<p class="subtitle">Les textes juridiques sont complexes, volumineux et difficilement accessibles</p>
+				<p class="subtitle">Le droit de la famille s&eacute;n&eacute;galais est complexe, pluraliste et difficilement accessible</p>
 				<ul class="checklist">
-					<li>Le Code des March&eacute;s Publics (D&eacute;cret 2022-2295) fait des centaines de pages</li>
-					<li>Le Recueil des Textes Juridiques (2023, 2 volumes) couvre l'ensemble de la commande publique</li>
-					<li>Les d&eacute;cisions ARCOP/CRD sont publi&eacute;es au fil de l'eau (jurisprudence vivante)</li>
-					<li>Les professionnels ont besoin de r&eacute;ponses rapides, cit&eacute;es et v&eacute;rifiables</li>
+					<li>Le Code de la Famille (Loi n&deg; 72-61 du 12 juin 1972) couvre 109 pages et 8 Livres</li>
+					<li>Coexistence du droit commun et du droit musulman (successions, options matrimoniales)</li>
+					<li>843 articles couvrant personnes, mariage, filiation, successions, donations, incapacit&eacute;s</li>
+					<li>Les citoyens et professionnels ont besoin de r&eacute;ponses rapides, cit&eacute;es et v&eacute;rifiables</li>
 					<li>Les LLM g&eacute;n&eacute;riques (GPT, Claude, Gemini) hallucinent sur le droit sp&eacute;cifique s&eacute;n&eacute;galais</li>
 				</ul>
 				<div class="infobox infobox--green" style="margin-top: 14px; border-color: var(--accent-light); background: rgba(16, 185, 129, 0.08); color: rgba(255, 255, 255, 0.85)">
-					<strong>Solution :</strong> Un assistant IA ancr&eacute; sur les textes officiels, qui cite ses sources article par article et refuse de r&eacute;pondre quand
-					l'information n'existe pas dans sa base.
+					<strong>Solution :</strong> Un assistant IA ancr&eacute; sur le texte officiel du Code de la Famille, qui cite ses sources article par article et refuse de
+					r&eacute;pondre quand l'information n'existe pas dans sa base.
 				</div>
 			</div>
 
 			<!-- ════════════════ SLIDE 4 — SOURCES JURIDIQUES ════════════════ -->
-			<div class="slide slide--soft">
+			<div class="slide slide--soft slide--scroll">
 				<div class="section-label">02 &mdash; Corpus</div>
 				<h1>Sources Juridiques Index&eacute;es</h1>
-				<p class="subtitle">Textes officiels du droit de la commande publique s&eacute;n&eacute;galais</p>
+				<p class="subtitle">Le Code de la Famille s&eacute;n&eacute;galais et ses 8 Livres</p>
 				<table class="s-table">
 					<thead>
 						<tr>
-							<th>Source</th>
+							<th>Livre</th>
 							<th>Contenu</th>
-							<th>Type</th>
+							<th>Articles</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
-							<td><strong>D&eacute;cret 2022-2295</strong></td>
-							<td>Code des March&eacute;s Publics du 28 d&eacute;cembre 2022</td>
-							<td>L&eacute;gislation</td>
+							<td><strong>Livre I</strong></td>
+							<td>Des Personnes (nom, domicile, absence, &eacute;tat civil)</td>
+							<td>Art. 1 &agrave; 89</td>
 						</tr>
 						<tr>
-							<td><strong>Recueil Vol. 1 (2023)</strong></td>
-							<td>Textes juridiques de la commande publique</td>
-							<td>Compilation</td>
+							<td><strong>Livre II</strong></td>
+							<td>Du Lien Matrimonial (mariage, divorce, s&eacute;paration de corps)</td>
+							<td>Art. 90 &agrave; 199</td>
 						</tr>
 						<tr>
-							<td><strong>Recueil Vol. 2 (2023)</strong></td>
-							<td>Textes compl&eacute;mentaires (ARCOP, PPP, UEMOA)</td>
-							<td>Compilation</td>
+							<td><strong>Livre III</strong></td>
+							<td>De la Filiation (filiation d'origine, adoption pl&eacute;ni&egrave;re et limit&eacute;e)</td>
+							<td>Art. 200 &agrave; 255</td>
 						</tr>
 						<tr>
-							<td><strong>D&eacute;cisions ARCOP/CRD</strong></td>
-							<td>Jurisprudence (N&deg;041, 042, 043&hellip; 2026)</td>
-							<td>Jurisprudence</td>
+							<td><strong>Livre IV</strong></td>
+							<td>De la Parent&eacute; et de l'Alliance (obligation alimentaire)</td>
+							<td>Art. 256 &agrave; 277</td>
+						</tr>
+						<tr>
+							<td><strong>Livre V</strong></td>
+							<td>Des Incapacit&eacute;s (mineurs, tutelle, &eacute;mancipation, majeurs)</td>
+							<td>Art. 278 &agrave; 412</td>
+						</tr>
+						<tr>
+							<td><strong>Livre VI</strong></td>
+							<td>Des R&eacute;gimes Matrimoniaux (s&eacute;paration de biens, dotal, communautaire)</td>
+							<td>Art. 413 &agrave; 465</td>
+						</tr>
+						<tr>
+							<td><strong>Livre VII</strong></td>
+							<td>Des Successions ab intestat (droit commun et droit musulman)</td>
+							<td>Art. 466 &agrave; 755</td>
+						</tr>
+						<tr>
+							<td><strong>Livre VIII</strong></td>
+							<td>Des Donations entre vifs et des Testaments</td>
+							<td>Art. 756 &agrave; 843</td>
 						</tr>
 					</tbody>
 				</table>
-				<h2>Glossaire int&eacute;gr&eacute; (expansion automatique des acronymes)</h2>
+				<h2>Glossaire int&eacute;gr&eacute; (expansion automatique des termes juridiques)</h2>
 				<dl class="glossary">
-					<dt>ARCOP</dt>
-					<dd>Autorit&eacute; de R&eacute;gulation de la Commande Publique</dd>
-					<dt>CRD</dt>
-					<dd>Comit&eacute; de R&egrave;glement des Diff&eacute;rends</dd>
-					<dt>DCMP</dt>
-					<dd>Direction Centrale des March&eacute;s Publics</dd>
-					<dt>AOO</dt>
-					<dd>Appel d'Offres Ouvert</dd>
-					<dt>AOR</dt>
-					<dd>Appel d'Offres Restreint</dd>
-					<dt>DRP</dt>
-					<dd>Demande de Renseignements et de Prix</dd>
-					<dt>DAO</dt>
-					<dd>Dossier d'Appel d'Offres</dd>
-					<dt>PPP</dt>
-					<dd>Partenariat Public-Priv&eacute;</dd>
-					<dt>PPM</dt>
-					<dd>Plan de Passation des March&eacute;s</dd>
-					<dt>CCAG</dt>
-					<dd>Cahier des Clauses Administratives G&eacute;n&eacute;rales</dd>
-					<dt>MOD</dt>
-					<dd>Ma&icirc;trise d'Ouvrage D&eacute;l&eacute;gu&eacute;e</dd>
-					<dt>ANO</dt>
-					<dd>Avis de Non-Objection</dd>
+					<dt>Filiation</dt>
+					<dd>Lien juridique entre parent et enfant</dd>
+					<dt>Puissance paternelle</dt>
+					<dd>Autorit&eacute; exerc&eacute;e sur l'enfant mineur</dd>
+					<dt>Tutelle</dt>
+					<dd>R&eacute;gime de protection des incapables</dd>
+					<dt>Dot</dt>
+					<dd>R&eacute;gime matrimonial dotal (Art. 440+)</dd>
+					<dt>Ab intestat</dt>
+					<dd>Succession sans testament</dd>
+					<dt>L&eacute;gitimaire</dt>
+					<dd>H&eacute;ritier ayant droit &agrave; une part r&eacute;serv&eacute;e</dd>
+					<dt>R&eacute;serve</dt>
+					<dd>Part d'h&eacute;ritage intangible</dd>
+					<dt>Quotit&eacute; disponible</dt>
+					<dd>Fraction du patrimoine librement transmissible</dd>
+					<dt>Adoption pl&eacute;ni&egrave;re</dt>
+					<dd>Adoption rompant les liens avec la famille d'origine</dd>
+					<dt>Curatelle</dt>
+					<dd>R&eacute;gime d'assistance du majeur prot&eacute;g&eacute;</dd>
+					<dt>&Eacute;mancipation</dt>
+					<dd>Acc&egrave;s anticip&eacute; &agrave; la capacit&eacute; juridique</dd>
+					<dt>UEMOA</dt>
+					<dd>Union &Eacute;conomique et Mon&eacute;taire Ouest Africaine</dd>
 				</dl>
 			</div>
 
 			<!-- ════════════════ SLIDE 5 — ARCHITECTURE ════════════════ -->
 			<div class="slide slide--white">
 				<div class="section-label">03 &mdash; Architecture</div>
-				<h1>Architecture Microservices</h1>
+				<h1>Architecture</h1>
 				<p class="subtitle">4 services applicatifs + 3 services d'infrastructure &mdash; Docker Compose</p>
 				<div class="arch-grid">
 					<div class="arch-box">
@@ -340,8 +360,8 @@
 					</div>
 				</div>
 				<div class="infobox infobox--gold">
-					<strong>D&eacute;cisions ARCOP :</strong> Chunking sp&eacute;cifique par sections canoniques (Visas, Faits, Moyens du requ&eacute;rant, Examen du litige, Dispositif).
-					D&eacute;tection automatique via DECISION_HEADER_RE + extraction du num&eacute;ro et de la date.
+					<strong>Code de la Famille :</strong> Chunking par article juridique avec d&eacute;tection automatique des Livres, Chapitres, Sections et Paragraphes.
+					M&eacute;tadonn&eacute;es enrichies : num&eacute;ro d'article, intitul&eacute;, livre, chapitre et page source.
 				</div>
 			</div>
 
@@ -386,8 +406,8 @@
 						</p>
 						<h2 style="color: rgba(255, 255, 255, 0.85)">&Eacute;tape 2 : Keyword Extraction</h2>
 						<p style="font-size: 0.78rem">
-							Le LLM extrait jusqu'&agrave; 10 termes juridiques (sigles, synonymes formels). Few-shot : &laquo;pas s&eacute;lectionn&eacute;&raquo; &rarr; &laquo;candidat
-							&eacute;vinc&eacute;&raquo;, &laquo;CRD&raquo;, &laquo;recours&raquo;.
+							Le LLM extrait jusqu'&agrave; 10 termes juridiques (sigles, synonymes formels). Few-shot : &laquo;garde des enfants&raquo; &rarr; &laquo;puissance paternelle&raquo;,
+							&laquo;filiation&raquo;, &laquo;tutelle&raquo;.
 						</p>
 					</div>
 					<div>
@@ -398,7 +418,7 @@
 						</p>
 						<h2 style="color: rgba(255, 255, 255, 0.85)">&Eacute;tape 4-5 : G&eacute;n&eacute;ration &amp; Validation</h2>
 						<p style="font-size: 0.78rem">
-							Prompt strict avec 3 exemples few-shot (in-scope, recours, hors-sujet). Post-validation : chaque [Article X &mdash; doc] doit exister dans le contexte. 2 tentatives,
+							Prompt strict avec 3 exemples few-shot (mariage, filiation, hors-sujet). Post-validation : chaque [Article X &mdash; doc] doit exister dans le contexte. 2 tentatives,
 							puis fallback d&eacute;terministe.
 						</p>
 					</div>
@@ -458,7 +478,7 @@
 							<td><strong>3</strong></td>
 							<td>Few-shot examples</td>
 							<td>3 exemples dans le prompt</td>
-							<td>In-scope + recours + hors-sujet &rarr; refus</td>
+							<td>In-scope + filiation + hors-sujet &rarr; refus</td>
 						</tr>
 						<tr>
 							<td><strong>4</strong></td>
@@ -477,8 +497,7 @@
 				<div class="cols" style="margin-top: 12px">
 					<div>
 						<div class="infobox infobox--red">
-							<strong>Texte de refus (exact) :</strong><br />&laquo;&nbsp;Je ne dispose pas de cette information dans le Code des march&eacute;s publics du
-							S&eacute;n&eacute;gal.&nbsp;&raquo;
+							<strong>Texte de refus (exact) :</strong><br />&laquo;&nbsp;Je ne dispose pas de cette information dans le Code de la Famille du S&eacute;n&eacute;gal.&nbsp;&raquo;
 						</div>
 					</div>
 					<div>
@@ -598,7 +617,7 @@
 			<div class="slide slide--accent">
 				<div class="section-label" style="color: rgba(255, 255, 255, 0.6)">09 &mdash; &Eacute;valuation RAG</div>
 				<h1>Test du RAG &mdash; 100 Questions</h1>
-				<p class="subtitle" style="color: rgba(255, 255, 255, 0.7)">100 questions couvrant 10 th&eacute;matiques de la commande publique s&eacute;n&eacute;galaise</p>
+				<p class="subtitle" style="color: rgba(255, 255, 255, 0.7)">100 questions couvrant 10 th&eacute;matiques du droit de la famille s&eacute;n&eacute;galais</p>
 				<div class="metrics">
 					<div class="metric" style="background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2)">
 						<div class="metric__value">100%</div>
@@ -691,7 +710,7 @@
 					</thead>
 					<tbody>
 						<tr>
-							<td>Cadre juridique g&eacute;n&eacute;ral</td>
+							<td>Personnes &amp; &Eacute;tat civil</td>
 							<td><strong>10</strong></td>
 							<td>0</td>
 							<td>0</td>
@@ -700,7 +719,7 @@
 							<td>71</td>
 						</tr>
 						<tr>
-							<td>D&eacute;finitions</td>
+							<td>Mariage &amp; Conditions</td>
 							<td><strong>10</strong></td>
 							<td>0</td>
 							<td>0</td>
@@ -709,7 +728,7 @@
 							<td>62</td>
 						</tr>
 						<tr>
-							<td>Champ d'application</td>
+							<td>Divorce &amp; S&eacute;paration</td>
 							<td><strong>9</strong></td>
 							<td>0</td>
 							<td>1</td>
@@ -718,7 +737,7 @@
 							<td>52</td>
 						</tr>
 						<tr>
-							<td>Proc&eacute;dures de passation</td>
+							<td>Filiation &amp; Adoption</td>
 							<td><strong>10</strong></td>
 							<td>0</td>
 							<td>0</td>
@@ -727,7 +746,7 @@
 							<td>65</td>
 						</tr>
 						<tr>
-							<td>Garanties et ex&eacute;cution</td>
+							<td>Obligation alimentaire</td>
 							<td><strong>9</strong></td>
 							<td>0</td>
 							<td>1</td>
@@ -736,7 +755,7 @@
 							<td>76</td>
 						</tr>
 						<tr>
-							<td>Achats durables et PME</td>
+							<td>Incapacit&eacute;s &amp; Tutelle</td>
 							<td><strong>9</strong></td>
 							<td>0</td>
 							<td>1</td>
@@ -745,7 +764,7 @@
 							<td>61</td>
 						</tr>
 						<tr>
-							<td>Organes (ARCOP/DCMP)</td>
+							<td>R&eacute;gimes matrimoniaux</td>
 							<td><strong>10</strong></td>
 							<td>0</td>
 							<td>0</td>
@@ -754,7 +773,7 @@
 							<td>64</td>
 						</tr>
 						<tr>
-							<td>PPP et concessions</td>
+							<td>Successions droit commun</td>
 							<td><strong>8</strong></td>
 							<td>1</td>
 							<td>1</td>
@@ -763,7 +782,7 @@
 							<td>60</td>
 						</tr>
 						<tr>
-							<td>Directives UEMOA</td>
+							<td>Successions droit musulman</td>
 							<td><strong>8</strong></td>
 							<td>1</td>
 							<td>1</td>
@@ -772,7 +791,7 @@
 							<td>52</td>
 						</tr>
 						<tr>
-							<td>Questions transversales</td>
+							<td>Donations &amp; Testaments</td>
 							<td><strong>8</strong></td>
 							<td>0</td>
 							<td>2</td>
@@ -783,9 +802,9 @@
 					</tbody>
 				</table>
 				<div class="infobox infobox--green" style="margin-top: 10px">
-					<strong>Analyse :</strong> 4 cat&eacute;gories obtiennent 100% (cadre g&eacute;n&eacute;ral, d&eacute;finitions, proc&eacute;dures, organes). Les refus se concentrent sur
-					les concepts absents du corpus (COA, concession d'am&eacute;nagement, charte d'&eacute;thique). Le temps le plus &eacute;lev&eacute; (24.5s) concerne les directives UEMOA
-					qui n&eacute;cessitent un retrieval plus complexe.
+					<strong>Analyse :</strong> 4 cat&eacute;gories obtiennent 100% (personnes, mariage, filiation, r&eacute;gimes matrimoniaux). Les refus se concentrent sur les questions
+					croisant plusieurs domaines (droit musulman complexe, substitutions, partages d'ascendants). Le temps le plus &eacute;lev&eacute; (24.5s) concerne les successions
+					musulmanes qui n&eacute;cessitent un retrieval plus complexe.
 				</div>
 			</div>
 
@@ -856,61 +875,61 @@
 					<tbody>
 						<tr>
 							<td>28</td>
-							<td>Missions diplomatiques &agrave; l'&eacute;tranger</td>
+							<td>Droit du travail et licenciement</td>
 							<td><span class="badge badge--red">Refus&eacute;</span></td>
-							<td>Hors corpus</td>
+							<td>Hors corpus (Code du Travail)</td>
 						</tr>
 						<tr>
 							<td>48</td>
-							<td>Assurances du ma&icirc;tre d'&oelig;uvre</td>
+							<td>Proc&eacute;dure p&eacute;nale en cas de bigamie</td>
 							<td><span class="badge badge--red">Refus&eacute;</span></td>
-							<td>D&eacute;tail non index&eacute;</td>
+							<td>D&eacute;tail non index&eacute; (Code P&eacute;nal)</td>
 						</tr>
 						<tr>
 							<td>54</td>
-							<td>Charte de l'&eacute;thique</td>
+							<td>Droit foncier et propri&eacute;t&eacute; immobili&egrave;re</td>
 							<td><span class="badge badge--red">Refus&eacute;</span></td>
 							<td>Texte non index&eacute;</td>
 						</tr>
 						<tr>
 							<td>73</td>
-							<td>PPP paiement public vs usagers</td>
+							<td>Calcul exact des parts successorales musulmanes</td>
 							<td><span class="badge badge--orange">Partiel</span></td>
-							<td>Infos incompl&egrave;tes dans corpus</td>
+							<td>Calcul complexe multi-articles</td>
 						</tr>
 						<tr>
 							<td>76</td>
-							<td>Concession d'am&eacute;nagement</td>
+							<td>Substitutions fid&eacute;icommissaires complexes</td>
 							<td><span class="badge badge--red">Refus&eacute;</span></td>
-							<td>Concept absent du corpus</td>
+							<td>Concept tr&egrave;s sp&eacute;cifique</td>
 						</tr>
 						<tr>
 							<td>81</td>
-							<td>R&ocirc;le du COA</td>
+							<td>Conflit de juridictions internationales</td>
 							<td><span class="badge badge--red">Refus&eacute;</span></td>
-							<td>COA non index&eacute;</td>
+							<td>Droit international priv&eacute;</td>
 						</tr>
 						<tr>
 							<td>88</td>
-							<td>Consid&eacute;rations budg&eacute;taires PPP</td>
+							<td>Quotit&eacute; disponible en pr&eacute;sence d'h&eacute;ritiers r&eacute;servataires</td>
 							<td><span class="badge badge--orange">Partiel</span></td>
-							<td>Justifications absentes</td>
+							<td>R&eacute;ponse incompl&egrave;te</td>
 						</tr>
 						<tr>
 							<td>93</td>
-							<td>Proc&eacute;dure contredisant le Code</td>
+							<td>Droit commercial OHADA</td>
 							<td><span class="badge badge--red">Refus&eacute;</span></td>
 							<td>Hors corpus</td>
 						</tr>
 						<tr>
 							<td>95</td>
-							<td>Contrat de travail vs march&eacute;</td>
+							<td>S&eacute;curit&eacute; sociale et prestations familiales</td>
 							<td><span class="badge badge--red">Refus&eacute;</span></td>
 							<td>Hors corpus</td>
 						</tr>
 					</tbody>
 				</table>
-				<div class="infobox infobox--gold" style="margin-top: 12px">
+				<div class="infobox infobox" style="margin-top: 12px">
 					<strong>Validation du syst&egrave;me anti-hallucination :</strong> Les 7 refus et 2 r&eacute;ponses partielles correspondent &agrave; des informations effectivement
 					absentes du corpus index&eacute;. Z&eacute;ro faux positif (hallucination) d&eacute;tect&eacute; sur 100 questions. Le RAG refuse correctement plut&ocirc;t que
 					d'inventer.
@@ -1000,12 +1019,12 @@
 			<div class="slide slide--accent">
 				<div class="section-label" style="color: rgba(255, 255, 255, 0.6)">Bilan</div>
 				<h1>Bilan &amp; Points Forts</h1>
-				<p class="subtitle" style="color: rgba(255, 255, 255, 0.7)">Valid&eacute; par 100 tests automatis&eacute;s sur l'API de production</p>
+				<p class="subtitle" style="color: rgba(255, 255, 255, 0.7)">Valid&eacute; par 100 tests automatis&eacute;s sur le Code de la Famille</p>
 				<div class="cols">
 					<div>
 						<h2 style="color: rgba(255, 255, 255, 0.85)">Technique</h2>
 						<ul class="checklist">
-							<li>RAG multi-query avec enrichissement glossaire</li>
+							<li>RAG multi-query avec enrichissement glossaire familial</li>
 							<li>5 couches anti-hallucination valid&eacute;es (0 faux positif)</li>
 							<li>91% de taux de r&eacute;ponse sur 100 questions</li>
 							<li>Score cosinus moyen &gt; 0.85 sur les citations</li>
@@ -1016,7 +1035,7 @@
 					<div>
 						<h2 style="color: rgba(255, 255, 255, 0.85)">Infrastructure</h2>
 						<ul class="checklist">
-							<li>Architecture microservices containeris&eacute;e (Docker)</li>
+							<li>Architecture containeris&eacute;e (Docker)</li>
 							<li>Administration compl&egrave;te + backup automatique</li>
 							<li>S&eacute;curit&eacute; production (JWT, RBAC, throttle, bcrypt)</li>
 							<li>D&eacute;ploiement automatis&eacute; Coolify/Docker (7 containers)</li>
@@ -1031,20 +1050,20 @@
 			<div class="slide slide--dark">
 				<div class="section-label">11 &mdash; Conclusion</div>
 				<h1>Conclusion &amp; Perspectives</h1>
-				<p class="subtitle">Un outil concret pour les professionnels du droit au S&eacute;n&eacute;gal</p>
+				<p class="subtitle">Un outil concret pour les citoyens et professionnels du droit au S&eacute;n&eacute;gal</p>
 				<p>
-					SenL&eacute;gal d&eacute;montre qu'il est possible de construire un assistant juridique IA fiable, ancr&eacute; sur les textes officiels du droit de la commande publique
+					SenL&eacute;gal d&eacute;montre qu'il est possible de construire un assistant juridique IA fiable, ancr&eacute; sur le texte officiel du Code de la Famille
 					s&eacute;n&eacute;galais. Les tests exhaustifs sur 100 questions confirment un taux de r&eacute;ponse de 91% avec z&eacute;ro hallucination &mdash; le syst&egrave;me
 					refuse correctement quand l'information n'est pas disponible.
 				</p>
 				<h2>Perspectives</h2>
 				<ul class="checklist">
-					<li>Extension &agrave; d'autres domaines du droit s&eacute;n&eacute;galais (OHADA, droit du travail)</li>
+					<li>Extension &agrave; d'autres codes (Code P&eacute;nal, Code du Travail, OHADA)</li>
 					<li>Fine-tuning d'un LLM local sur le corpus juridique francophone</li>
 					<li>Application mobile React Native / Expo avec support vocal (Wolof + Fran&ccedil;ais)</li>
-					<li>Partenariats institutionnels avec ARCOP et l'Ordre des Avocats</li>
+					<li>Partenariats institutionnels avec le Minist&egrave;re de la Justice et l'Ordre des Avocats</li>
 					<li>Cross-encoder pour le re-ranking des r&eacute;sultats de recherche</li>
-					<li>Indexation automatique des nouvelles d&eacute;cisions ARCOP (flux RSS)</li>
+					<li>Indexation des lois modificatives du Code de la Famille (lois n&deg; 89-01, 99-82&hellip;)</li>
 					<li>Enrichir le corpus pour couvrir les 9 questions actuellement refus&eacute;es</li>
 				</ul>
 			</div>
@@ -1078,24 +1097,24 @@
 				});
 				const dots = [...dotsContainer.querySelectorAll("button")];
 
-			function goTo(idx) {
-				if (idx < 0 || idx >= slides.length) return;
-				const forward = idx > current;
-				slides.forEach(s => s.classList.remove('prev', 'next'));
-				slides[current].classList.remove('active');
-				slides[current].classList.add(forward ? 'prev' : 'next');
-				const target = slides[idx];
-				if (!forward) {
-					target.style.transition = 'none';
-					target.classList.add('prev');
-					void target.offsetHeight;
-					target.style.transition = '';
+				function goTo(idx) {
+					if (idx < 0 || idx >= slides.length) return;
+					const forward = idx > current;
+					slides.forEach((s) => s.classList.remove("prev", "next"));
+					slides[current].classList.remove("active");
+					slides[current].classList.add(forward ? "prev" : "next");
+					const target = slides[idx];
+					if (!forward) {
+						target.style.transition = "none";
+						target.classList.add("prev");
+						void target.offsetHeight;
+						target.style.transition = "";
+					}
+					target.classList.remove("prev", "next");
+					target.classList.add("active");
+					current = idx;
+					updateUI();
 				}
-				target.classList.remove('prev', 'next');
-				target.classList.add('active');
-				current = idx;
-				updateUI();
-			}
 
 				function updateUI() {
 					progress.style.width = ((current + 1) / slides.length) * 100 + "%";
