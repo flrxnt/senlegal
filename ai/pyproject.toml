@@ -1,7 +1,7 @@
 [project]
 name = "senlegal-ai"
 version = "0.1.0"
-description = "Service IA RAG pour le Code des marchés publics du Sénégal"
+description = "Service IA RAG pour le droit sénégalais (Code de la Famille et textes connexes)"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.115.0",

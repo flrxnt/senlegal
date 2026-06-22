@@ -1,9 +1,9 @@
 <script setup lang="ts">
 const features = [
-	{ title: "Recherche Sémantique", desc: "Interrogation en langage naturel du Code.", article: "Titres I à VI", reliability: "Haute" },
-	{ title: "Audit de Conformité", desc: "Analyse croisée d'un DAO avec le décret 2022-2295.", article: "Art. 53-80", reliability: "Absolue" },
-	{ title: "Rédaction de Recours", desc: "Structuration juridique des plaintes (ARCOP).", article: "Art. 88-92", reliability: "Experte" },
-	{ title: "Calcul des Délais", desc: "Planification des échéances légales.", article: "Titre III", reliability: "Précise" },
+	{ title: "Recherche Sémantique", desc: "Interrogation en langage naturel du Code de la Famille.", article: "Livres I à VIII", reliability: "Haute" },
+	{ title: "Droit du Mariage", desc: "Conditions, régimes matrimoniaux, divorce et effets.", article: "Art. 108-199", reliability: "Absolue" },
+	{ title: "Successions & Filiation", desc: "Droit commun et droit musulman, filiation, adoption.", article: "Art. 200-755", reliability: "Experte" },
+	{ title: "Calcul des Délais", desc: "Planification des échéances légales (absence, tutelle).", article: "Art. 16-28", reliability: "Précise" },
 ];
 </script>
 

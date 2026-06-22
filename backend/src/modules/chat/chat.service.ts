@@ -13,12 +13,12 @@ import { AnalyticsService } from '../analytics/analytics.service';
 const HISTORY_MAX_MESSAGES = 20;
 
 /**
- * Texte exact renvoyé par le service IA quand aucun extrait du Code des marchés
- * publics ne couvre la question. Quand l'IA refuse ainsi, on n'attache aucune
- * citation pour ne pas faire croire à des sources fiables côté UI.
+ * Texte exact renvoyé par le service IA quand aucun extrait des textes
+ * juridiques indexés ne couvre la question. Quand l'IA refuse ainsi, on
+ * n'attache aucune citation pour ne pas faire croire à des sources fiables côté UI.
  */
 const REFUSAL_TEXT =
-  'Je ne dispose pas de cette information dans le Code des marchés publics du Sénégal.';
+  'Je ne dispose pas de cette information dans les textes juridiques sénégalais indexés.';
 
 function isRefusalAnswer(answer: string | null | undefined): boolean {
   if (!answer) return false;

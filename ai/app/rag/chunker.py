@@ -1,4 +1,4 @@
-"""Découpage du texte par article du Code des marchés publics."""
+"""Découpage du texte par article des textes juridiques sénégalais."""
 from __future__ import annotations
 
 import hashlib

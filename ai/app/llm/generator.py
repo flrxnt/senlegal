@@ -1,4 +1,4 @@
-"""Génération via Ollama Cloud + garde-fou de citations + fallback déterministe."""
+"""Génération via Ollama Cloud + garde-fou de citations + fallback déterministe (droit sénégalais)."""
 from __future__ import annotations
 
 import logging
@@ -110,7 +110,7 @@ def _deterministic_answer(chunks: list[RetrievedChunk]) -> str:
     if len(snippet) > 800:
         snippet = snippet[:800].rsplit(" ", 1)[0] + "…"
     intro = (
-        "D'après le Code des marchés publics du Sénégal, voici l'extrait le plus "
+        "D'après les textes juridiques sénégalais, voici l'extrait le plus "
         f"pertinent (Article {top.article_number} — {top.document}, p. {top.page}) :\n\n"
     )
     body = f"« {snippet} »\n\n"

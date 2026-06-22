@@ -11,8 +11,8 @@ export function planLabel(plan: Plan | null | undefined): string {
 
 export function planTagline(plan: Plan | null | undefined): string {
   return plan === 'PRO'
-    ? 'Consultations illimitées, audit DAO, jurisprudence ARCOP intégrée.'
-    : '5 consultations par jour, accès intégral au Décret 2022-2295.'
+    ? 'Consultations illimitées, corpus juridique complet, analyses approfondies.'
+    : '5 consultations par jour, accès intégral au Code de la Famille.'
 }
 
 export const FREE_DAILY_LIMIT = 5

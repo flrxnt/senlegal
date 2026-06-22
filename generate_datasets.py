@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Génération de datasets d'entraînement et de test à partir des Recueils
-juridiques de la commande publique au Sénégal (Vol. 1 & 2).
+Génération de datasets d'entraînement et de test à partir des textes
+juridiques sénégalais (Code de la Famille et autres textes indexés).
 
 Utilise le pipeline de parsing/chunking du projet SenLegal,
 puis génère des paires Q/A via Ollama Cloud (Gemma 4 31B).
@@ -31,12 +31,12 @@ OUT_DIR = Path(__file__).parent / "datasets"
 TRAIN_SPLIT = 0.80
 SEED = 42
 
-QA_GENERATION_PROMPT = """Tu es un expert du droit de la commande publique au Sénégal. À partir de l'extrait juridique ci-dessous, génère exactement {n} paires question-réponse au format JSON.
+QA_GENERATION_PROMPT = """Tu es un expert du droit sénégalais (Code de la Famille et textes connexes). À partir de l'extrait juridique ci-dessous, génère exactement {n} paires question-réponse au format JSON.
 
 Règles :
 - Les questions doivent être variées : définitions, conditions, procédures, obligations, distinctions, rôles.
 - Les réponses doivent être précises, complètes et fidèles au texte source. Cite l'article quand c'est pertinent.
-- Les questions doivent pouvoir être posées par un praticien du droit ou un étudiant.
+- Les questions doivent pouvoir être posées par un praticien du droit, un étudiant ou un citoyen.
 - Pas de questions triviales (oui/non simple). Préfère des questions ouvertes ou à développement court.
 - Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ou après.
 
@@ -225,7 +225,7 @@ def _save_datasets(train_set, test_set, all_pairs):
                     "messages": [
                         {
                             "role": "system",
-                            "content": "Tu es SenLégal, un assistant juridique IA spécialisé dans le droit de la commande publique au Sénégal. Tu réponds de manière précise en citant les articles et sources juridiques pertinents."
+                            "content": "Tu es SenLégal, un assistant juridique IA spécialisé dans le droit sénégalais (Code de la Famille et textes connexes). Tu réponds de manière précise en citant les articles et sources juridiques pertinents."
                         },
                         {"role": "user", "content": item["question"]},
                         {"role": "assistant", "content": item["answer"]},

@@ -10,7 +10,7 @@ def _chunk(num="53"):
         score=0.9,
         article_number=num,
         article_title="Seuils",
-        document="Code des marchés publics",
+        document="Code de la Famille",
         volume="Volume 1",
         section="CHAPITRE II",
         page=87,
@@ -40,19 +40,19 @@ def test_build_messages_empty_context():
 
 
 def test_extract_cited_articles():
-    text = "Le seuil est X [Article 53 — Code des marchés] et Y [Article premier — Recueil]."
+    text = "Le seuil est X [Article 53 — Code de la Famille] et Y [Article premier — Recueil]."
     arts = extract_cited_articles(text)
     assert "53" in arts
     assert "premier" in arts
 
 
 def test_validate_citations_ok():
-    text = "Réponse [Article 53 — Code des marchés publics]."
+    text = "Réponse [Article 53 — Code de la Famille]."
     assert validate_citations(text, [_chunk("53")]) is True
 
 
 def test_validate_citations_hallucination():
-    text = "Réponse [Article 999 — Code des marchés publics]."
+    text = "Réponse [Article 999 — Code de la Famille]."
     assert validate_citations(text, [_chunk("53")]) is False
 
 

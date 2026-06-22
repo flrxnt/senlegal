@@ -42,7 +42,7 @@ function submit() {
 					:transition="{ duration: 1, delay: 0.4 }"
 					class="mt-6 md:mt-8 font-sans text-base md:text-lg font-light text-muted-ink max-w-md leading-relaxed"
 				>
-					Une expertise juridique instantanée, ancrée dans le Code des Marchés Publics (Décret 2022-2295) et la jurisprudence de l'ARCOP. La doctrine au service de l'action.
+					Une expertise juridique instantanée, ancrée dans le Code de la Famille du Sénégal et les textes juridiques officiels. La doctrine au service de l'action.
 				</motion.p>
 
 				<motion.form
@@ -57,7 +57,7 @@ function submit() {
 						v-model="query"
 						type="text"
 						placeholder="Interrogez le code…"
-						aria-label="Interroger le code des marchés"
+						aria-label="Interroger le droit sénégalais"
 						class="w-full bg-transparent border-none outline-none font-serif text-lg md:text-xl placeholder:text-muted-ink/50 text-ink"
 					/>
 				</motion.form>

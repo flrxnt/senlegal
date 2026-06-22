@@ -1,9 +1,9 @@
 """Extraction de mots-clés et de correspondances juridiques pour enrichir le RAG.
 
-L'utilisateur formule sa question en langage naturel (« je n'ai pas été
-sélectionné, que faire ? »). Les textes officiels utilisent du vocabulaire
-juridique précis (« candidat évincé », « recours », « Comité de Règlement des
-Différends »…). On demande au LLM de proposer une liste courte de termes et
+L'utilisateur formule sa question en langage naturel (« je veux divorcer,
+que faire ? »). Les textes officiels utilisent du vocabulaire juridique précis
+(« dissolution du mariage », « divorce par consentement mutuel », « puissance
+paternelle »…). On demande au LLM de proposer une liste courte de termes et
 synonymes du domaine, qui seront concaténés à la requête envoyée au retriever.
 
 L'objectif n'est PAS de répondre à la question, mais d'enrichir le vecteur de
@@ -23,17 +23,17 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
     "Tu es un assistant qui extrait des mots-clés du vocabulaire juridique du "
-    "Code des marchés publics du Sénégal et du Recueil de la commande publique.\n"
+    "droit sénégalais (Code de la Famille, et tout autre texte juridique indexé).\n"
     "À partir d'une question utilisateur formulée en langage courant, tu produis "
     "une liste courte (max 10) de termes, synonymes, expressions et sigles "
-    "officiels susceptibles d'apparaître dans les textes de loi sénégalais sur la "
-    "commande publique et qui aideraient à retrouver les articles pertinents.\n\n"
+    "officiels susceptibles d'apparaître dans les textes de loi sénégalais et qui "
+    "aideraient à retrouver les articles pertinents.\n\n"
     "RÈGLES :\n"
     "- N'invente pas de noms d'institutions ou de procédures qui n'existent pas.\n"
-    "- Préfère le vocabulaire juridique formel (ex. \"candidat évincé\" plutôt que "
-    "\"perdant\", \"soumissionnaire\" plutôt que \"participant\").\n"
-    "- Inclus les sigles connus (ARCOP, DCMP, CRD, AOO, AOR, DRP, CMP, etc.) et "
-    "leurs formes développées quand c'est pertinent.\n"
+    "- Préfère le vocabulaire juridique formel (ex. \"puissance paternelle\" plutôt que "
+    "\"autorité des parents\", \"dissolution du mariage\" plutôt que \"fin du mariage\").\n"
+    "- Inclus les termes juridiques précis (filiation, tutelle, curatelle, ab intestat, "
+    "légitimaire, régime dotal, adoption plénière, etc.) quand c'est pertinent.\n"
     "- Pas de phrases, uniquement des expressions courtes (1 à 5 mots).\n"
     "- Réponds UNIQUEMENT avec un objet JSON de la forme : "
     '{\"keywords\": [\"...\", \"...\"]}. Aucun texte avant ou après.'
@@ -41,22 +41,22 @@ SYSTEM_PROMPT = (
 
 
 _FEWSHOT_USER = (
-    "Question : J'ai en tant que fournisseur soumis à un appel d'offres mais je "
-    "n'ai pas été sélectionné, que faire ?"
+    "Question : Mon ex-mari ne veut pas me donner la garde de mes enfants "
+    "après le divorce, que faire ?"
 )
 _FEWSHOT_ASSISTANT = json.dumps(
     {
         "keywords": [
-            "soumissionnaire",
-            "candidat évincé",
-            "attribution provisoire",
-            "notification d'attribution",
-            "recours",
-            "contestation",
-            "Comité de Règlement des Différends",
-            "CRD",
-            "ARCOP",
-            "débriefing",
+            "garde des enfants",
+            "puissance paternelle",
+            "divorce",
+            "effets du divorce",
+            "droit de garde",
+            "intérêt de l'enfant",
+            "pension alimentaire",
+            "obligation alimentaire",
+            "attribution de la garde",
+            "juge de la famille",
         ]
     },
     ensure_ascii=False,

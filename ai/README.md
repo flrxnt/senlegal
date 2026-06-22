@@ -1,6 +1,6 @@
 # SenLegal AI
 
-Service IA RAG (Retrieval-Augmented Generation) pour répondre aux questions sur le **Code des marchés publics du Sénégal**, en s'appuyant strictement sur le *Recueil des textes juridiques de la commande publique au Sénégal* (édition 2023, volumes 1 & 2).
+Service IA RAG (Retrieval-Augmented Generation) pour répondre aux questions sur le **droit sénégalais** (Code de la Famille et textes connexes), en s'appuyant strictement sur les textes juridiques officiels indexés.
 
 Le service expose une API HTTP (FastAPI) consommée par `backend/`. Il combine :
 - **Embeddings** multilingues (`intfloat/multilingual-e5-small`)

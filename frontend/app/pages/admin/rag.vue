@@ -187,7 +187,7 @@ function chunkCount(d: RagDoc): number | null {
 	<div>
 		<h1 class="font-serif text-4xl md:text-5xl text-ink mb-3">Sources <span class="italic font-light text-brand">RAG</span>.</h1>
 		<p class="text-muted-ink font-light mb-8 max-w-xl">
-			PDF officiels indexés dans la base juridique (Code des marchés, jurisprudence ARCOP, doctrine). Stockés dans MinIO ; ré-indexables sans ré-upload.
+			PDF officiels indexés dans la base juridique (Code de la Famille et textes connexes). Stockés dans MinIO ; ré-indexables sans ré-upload.
 		</p>
 
 		<div class="flex items-center justify-between mb-4 border-t border-b border-rule py-4 gap-4 flex-wrap">

@@ -165,7 +165,7 @@ function onKey(e: KeyboardEvent) {
 const headerTitle = computed(() => current.value?.title || "Consultation");
 
 /** Texte exact renvoyé par l'IA quand elle ne dispose pas de l'information. */
-const REFUSAL_TEXT = "Je ne dispose pas de cette information dans le Code des marchés publics du Sénégal.";
+const REFUSAL_TEXT = "Je ne dispose pas de cette information dans les textes juridiques sénégalais indexés.";
 
 function isRefusal(content?: string | null): boolean {
 	if (!content) return false;
@@ -195,7 +195,7 @@ function isRefusal(content?: string | null): boolean {
 				<div v-if="!messages.length && !isStreaming" class="text-center py-16">
 					<p class="font-serif italic text-2xl md:text-3xl text-ink mb-4">La salle vous est ouverte.</p>
 					<p class="text-sm text-muted-ink font-light max-w-md mx-auto">
-						Posez une question juridique sur le Code des marchés publics. Vos consultations sont archivées dans le panneau latéral.
+						Posez une question juridique sur le droit sénégalais. Vos consultations sont archivées dans le panneau latéral.
 					</p>
 				</div>
 				<motion.div

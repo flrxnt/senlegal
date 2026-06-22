@@ -6,7 +6,7 @@ import { useAuthStore } from "~/stores/auth";
 definePageMeta({ layout: "auth" });
 useSeoMeta({
 	title: "Accès — SenLégal",
-	description: "Identifiez-vous pour consulter le Code des Marchés Publics avec SenLégal.",
+	description: "Identifiez-vous pour consulter les textes juridiques sénégalais avec SenLégal.",
 	robots: "noindex,nofollow",
 });
 

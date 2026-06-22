@@ -62,7 +62,7 @@ import { ArrowUpRight } from "lucide-vue-next";
 						</li>
 						<li class="flex items-start gap-3 md:gap-4 text-sm md:text-base text-paper font-light">
 							<span class="mt-1.5 md:mt-2 w-1 h-1 bg-paper rounded-full shrink-0" />
-							Jurisprudence ARCOP intégrée
+							Corpus juridique complet intégré
 						</li>
 					</ul>
 					<NuxtLink

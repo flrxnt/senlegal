@@ -28,7 +28,7 @@ export default defineNuxtConfig({
     url: process.env.NUXT_PUBLIC_SITE_URL || 'https://senlegal.sn',
     name: 'SenLégal',
     description:
-      "Expertise juridique instantanée sur le Code des marchés publics du Sénégal (Décret 2022-2295) et la jurisprudence ARCOP.",
+      "Expertise juridique instantanée sur le Code de la Famille du Sénégal et les textes juridiques sénégalais.",
     defaultLocale: 'fr',
   },
 

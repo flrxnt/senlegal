@@ -1,55 +1,48 @@
-"""Glossaire des acronymes du droit sénégalais de la commande publique.
+"""Glossaire des termes juridiques du droit sénégalais.
 
-Les sigles ne figurent presque jamais tels quels dans les textes officiels
-(qui utilisent la forme développée). Pour qu'un utilisateur puisse écrire
-"DRP" et obtenir l'article qui définit la « demande de renseignements et
-de prix », on enrichit la requête avant l'embedding.
+Les termes courants ne figurent pas toujours tels quels dans les textes
+officiels (qui utilisent la forme juridique précise). Pour qu'un utilisateur
+puisse écrire « garde des enfants » et obtenir l'article qui traite de la
+« puissance paternelle », on enrichit la requête avant l'embedding.
 """
 from __future__ import annotations
 
 import re
 
-# Sigles → forme développée (en minuscules, sans accents superflus).
+# Termes courants → forme juridique / synonyme développé.
 ACRONYMS: dict[str, str] = {
-    "DRP": "demande de renseignements et de prix",
-    "DRPR": "demande de renseignements et de prix à compétition restreinte",
-    "DRPO": "demande de renseignements et de prix ouverte",
-    "AAO": "appel d'offres",
-    "AOO": "appel d'offres ouvert",
-    "AOR": "appel d'offres restreint",
-    "AOI": "appel d'offres international",
-    "AON": "appel d'offres national",
-    "DAO": "dossier d'appel d'offres",
-    "DPAO": "données particulières de l'appel d'offres",
-    "CCAG": "cahier des clauses administratives générales",
-    "CCAP": "cahier des clauses administratives particulières",
-    "CCTG": "cahier des clauses techniques générales",
-    "CCTP": "cahier des clauses techniques particulières",
-    "ARCOP": "Autorité de Régulation de la Commande Publique",
-    "ARMP": "Autorité de Régulation des Marchés Publics",
-    "DCMP": "Direction Centrale des Marchés Publics",
-    "CRD": "Comité de Règlement des Différends",
-    "CMP": "Code des Marchés Publics",
-    "PPM": "plan de passation des marchés",
-    "PV": "procès-verbal",
-    "MOD": "maîtrise d'ouvrage déléguée",
-    "PPP": "partenariat public-privé",
-    "UNAPPP": "Unité Nationale d'Appui aux Partenariats Public-Privé",
-    "BOAMP": "Bulletin Officiel des Marchés Publics",
-    "ANO": "avis de non-objection",
-    "OS": "ordre de service",
-    "RC": "règlement de la consultation",
-    "DQE": "détail quantitatif et estimatif",
-    "BPU": "bordereau des prix unitaires",
+    "garde des enfants": "puissance paternelle droit de garde",
+    "autorité parentale": "puissance paternelle",
+    "pension": "obligation alimentaire pension alimentaire",
+    "héritage": "succession ab intestat dévolution successorale",
+    "dot": "régime dotal régime matrimonial",
+    "mariage religieux": "constatation du mariage célébration",
+    "polygamie": "option de polygamie limitation de monogamie",
+    "tuteur": "tutelle juge des tutelles conseil de famille",
+    "adoption": "adoption plénière adoption limitée",
+    "divorce": "dissolution du mariage divorce contentieux consentement mutuel",
+    "séparation": "séparation de corps effets de la séparation",
+    "nom de famille": "nom patronymique attribution du nom",
+    "état civil": "officier de l'état civil actes registres",
+    "absent": "absence disparition présomption d'absence",
+    "émancipation": "émancipation mineur capacité juridique",
+    "curatelle": "majeur en curatelle incapable majeur protégé",
+    "testament": "testament olographe testament authentique legs",
+    "donation": "donation entre vifs libéralité irrévocabilité",
+    "succession musulmane": "succession de droit musulman légitimaire héritier universel",
+    "réserve héréditaire": "réserve quotité disponible réduction",
+    "partage": "partage successoral indivision liquidation",
+    "filiation": "filiation légitime filiation naturelle désaveu de paternité",
+    "reconnaissance": "reconnaissance de paternité filiation paternelle",
+    "régime matrimonial": "séparation de biens régime dotal communauté",
 }
 
 
 def expand_query(query: str) -> str:
-    """Renvoie la requête éventuellement augmentée des formes développées des sigles trouvés."""
+    """Renvoie la requête éventuellement augmentée des formes juridiques des termes trouvés."""
     expansions: list[str] = []
-    for sigle, forme in ACRONYMS.items():
-        # Sigle isolé (frontières \b), insensible à la casse.
-        if re.search(rf"\b{re.escape(sigle)}\b", query, flags=re.IGNORECASE):
+    for terme, forme in ACRONYMS.items():
+        if re.search(rf"\b{re.escape(terme)}\b", query, flags=re.IGNORECASE):
             expansions.append(forme)
     if not expansions:
         return query

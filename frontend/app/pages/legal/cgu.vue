@@ -16,7 +16,7 @@ useSeoMeta({
 		<section class="space-y-10 font-sans text-base text-ink/90 font-light leading-relaxed">
 			<div>
 				<h2 class="font-serif text-2xl text-ink mb-3">01 — Objet</h2>
-				<p>Les présentes CGU régissent l'accès et l'utilisation de la plateforme SenLégal, assistant juridique numérique adossé au Code des Marchés Publics du Sénégal.</p>
+				<p>Les présentes CGU régissent l'accès et l'utilisation de la plateforme SenLégal, assistant juridique numérique adossé aux textes juridiques sénégalais (Code de la Famille et textes connexes).</p>
 			</div>
 			<div>
 				<h2 class="font-serif text-2xl text-ink mb-3">02 — Compte utilisateur</h2>

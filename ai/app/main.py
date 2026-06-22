@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SenLegal AI",
-    description="API RAG ancrée sur le Code des marchés publics du Sénégal.",
+    description="API RAG ancrée sur les textes juridiques sénégalais (Code de la Famille et textes connexes).",
     version="0.1.0",
     lifespan=lifespan,
 )

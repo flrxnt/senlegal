@@ -56,7 +56,7 @@ def _detect_volume(filename: str) -> str | None:
 def _short_doc_name(filename: str) -> str:
     vol = _detect_volume(filename)
     if vol:
-        return f"Recueil des textes juridiques de la commande publique — {vol}"
+        return f"Recueil des textes juridiques — {vol}"
     return Path(filename).stem
 
 
